@@ -1,0 +1,25 @@
+name:           documentalist
+version:        0.1
+stability:      alpha
+synopsis:       A multi-language, extensible documentation generator
+homepage:       https://github.com/jspahrsummers/documentalist
+bug-reports:    https://github.com/jspahrsummers/documentalist/issues
+category:       Documentation
+author:         Justin Spahr-Summers
+maintainer:     justin.spahrsummers@gmail.com
+license:        MIT
+license-file:   LICENSE
+copyright:      Copyright (c) 2013 Justin Spahr-Summers
+cabal-version:  >= 1.16
+build-type:     Simple
+
+executable documentalist
+  default-language:   Haskell2010
+  build-depends:      base >= 4.6 && < 5,
+                      parsec >= 3.1.3
+  main-is:            Main.hs
+  default-extensions:
+
+source-repository head
+  type:     git
+  location: git://github.com/jspahrsummers/documentalist.git
