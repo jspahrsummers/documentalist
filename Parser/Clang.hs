@@ -2,6 +2,7 @@ module Parser.Clang ( SourceFile(..)
                     ) where
 
 import Control.Monad
+import Data.Maybe
 import Parser.Clang.Internal
 import Parser.Parseable
 import Text.ParserCombinators.Parsec.Error
@@ -17,5 +18,5 @@ instance Parseable SourceFile where
         cursors <- getCursor tu >>= getAllChildren
         comments <- mapM getComment cursors
 
-        print comments
+        print $ catMaybes comments
         return $ Left $ newErrorUnknown $ initialPos path

@@ -42,10 +42,18 @@ getCursor tu@(TranslationUnit _ tuPtr) = do
     ptr <- newForeignPtr FFI.p_free cxCursor
     return $ Cursor tu ptr
 
-getComment :: Cursor -> IO String
+getComment :: Cursor -> IO (Maybe String)
 getComment (Cursor _ ptr) =
-    withForeignPtr ptr $ \cxCursor ->
-        FFI.getRawCommentText cxCursor >>= peekCString
+    let rawComment cxCursor = do
+            cStr <- FFI.getRawCommentText cxCursor
+            if cStr == nullPtr
+                then return Nothing
+                else Just <$> peekCString cStr
+    in withForeignPtr ptr $ \cxCursor -> do
+        isDecl <- FFI.isDeclaration cxCursor
+        if isDecl == 0
+            then return Nothing
+            else rawComment cxCursor
 
 getAllChildren :: Cursor -> IO [Cursor]
 getAllChildren (Cursor tu ptr) = do

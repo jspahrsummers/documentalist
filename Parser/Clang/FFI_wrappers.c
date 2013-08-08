@@ -3,7 +3,10 @@
 #include <string.h>
 
 static char *doc_fromCXString(CXString str) {
-	char *copy = strdup(clang_getCString(str));
+	const char *original = clang_getCString(str);
+	if (original == NULL) return NULL;
+
+	char *copy = strdup(original);
 	clang_disposeString(str);
 	return copy;
 }
