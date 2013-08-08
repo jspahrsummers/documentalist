@@ -1,4 +1,5 @@
 module IL ( Entity(..)
+          , Module(..)
           , Block(..)
           , Paragraph(..)
           , Span(..)
@@ -8,8 +9,15 @@ module IL ( Entity(..)
           ) where
 
 -- | Represents any linkable and documentable thing.
-data Entity = Entity String [Entity]
+newtype Entity = Entity String
+    deriving (Eq, Ord, Show)
+
+-- | A module to document (usually a single file).
+data Module = Module Entity [Block]
     deriving (Eq, Show)
+
+instance Ord Module where
+    compare (Module entA _) (Module entB _) = compare entA entB
 
 -- | A documentation block for an Entity.
 data Block = Block
