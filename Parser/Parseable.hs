@@ -1,11 +1,10 @@
-module Parser.Parseable ( Parseable
+module Parser.Parseable ( Parseable(..)
                         ) where
 
 import IL
-import Text.ParserCombinators.Parsec
+import Text.ParserCombinators.Parsec.Error
 
 -- | Represents a parser for any frontend language.
 class Parseable p where
-    parse :: String                     -- ^ The name of the module being processed.
-          -> p                          -- ^ The raw source to process.
-          -> Either ParseError Module   -- ^ The parsed module, or the error that occurred.
+    parse :: p
+          -> IO (Either ParseError Module)  -- ^ The parsed module, or the error that occurred.

@@ -78,7 +78,7 @@ foreign import ccall unsafe "&free"
 
 type CXVisitor = CXCursor -> CXCursor -> IO CXChildVisitResult
 
-foreign import ccall unsafe "FFI_wrappers.h doc_visitChildren"
+foreign import ccall safe "FFI_wrappers.h doc_visitChildren"
     visitChildren :: CXCursor -> FunPtr CXVisitor -> IO CUInt
 
 foreign import ccall unsafe "FFI_wrappers.h doc_dupCursor"

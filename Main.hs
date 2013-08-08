@@ -1,6 +1,9 @@
+import Parser.Clang
 import Parser.Parseable
-import Parser.Clang.Internal
+import System.Environment
 
 main :: IO ()
-main = 
-    putStrLn "omg"
+main = do
+    args <- getArgs
+    parse $ SourceFile $ head args
+    return ()
