@@ -53,3 +53,21 @@ void doc_disposeTokenSpellings(char **spellings, unsigned numTokens) {
 
 	free(spellings);
 }
+
+typedef struct {
+	doc_CXCursorVisitor visitor;
+} doc_visitorClientData;
+
+static enum CXChildVisitResult doc_visitor(CXCursor cursor, CXCursor parent, CXClientData opaqueClientData) {
+	const doc_visitorClientData *clientData = opaqueClientData;
+	return clientData->visitor(&cursor, &parent);
+}
+
+unsigned doc_visitChildren(const CXCursor *cursor, doc_CXCursorVisitor visitor) {
+	doc_visitorClientData clientData = { .visitor = visitor };
+	return clang_visitChildren(*cursor, &doc_visitor, &clientData);
+}
+
+CXCursor *doc_dupCursor(const CXCursor *cursor) {
+	return doc_dupValue((CXCursor)*cursor);
+}

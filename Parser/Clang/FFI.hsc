@@ -20,9 +20,18 @@ type CXUnsavedFile = Ptr ()
 newtype CXTranslationUnitOption = CXTranslationUnitOption { unCXTranslationUnitOption :: CUInt }
     deriving (Eq, Show)
 
+newtype CXChildVisitResult = CXChildVisitResult CInt
+    deriving (Eq, Show)
+
 #{enum CXTranslationUnitOption, CXTranslationUnitOption
     , noOptions = CXTranslationUnit_None
     , skipFunctionBodies = CXTranslationUnit_SkipFunctionBodies
+    }
+
+#{enum CXChildVisitResult, CXChildVisitResult
+    , break = CXChildVisit_Break
+    , continue = CXChildVisit_Continue
+    , recurse = CXChildVisit_Recurse
     }
 
 combineOptions :: [CXTranslationUnitOption] -> CXTranslationUnitOption
@@ -66,3 +75,14 @@ foreign import ccall unsafe "FFI_wrappers.h doc_disposeTokenSpellings"
 
 foreign import ccall unsafe "&free"
     p_free :: FunPtr (Ptr () -> IO ())
+
+type CXVisitor = CXCursor -> CXCursor -> IO CXChildVisitResult
+
+foreign import ccall unsafe "FFI_wrappers.h doc_visitChildren"
+    visitChildren :: CXCursor -> FunPtr CXVisitor -> IO CUInt
+
+foreign import ccall unsafe "FFI_wrappers.h doc_dupCursor"
+    dupCursor :: CXCursor -> IO CXCursor
+
+foreign import ccall "wrapper"
+    mkVisitor :: CXVisitor -> IO (FunPtr CXVisitor)

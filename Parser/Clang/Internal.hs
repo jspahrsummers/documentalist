@@ -1,5 +1,7 @@
 module Parser.Clang.Internal where
 
+import Control.Applicative
+import Data.IORef
 import Foreign.C.String
 import Foreign.ForeignPtr
 import Foreign.Ptr
@@ -36,3 +38,20 @@ getComment :: Cursor -> IO String
 getComment (Cursor _ ptr) =
     withForeignPtr ptr $ \cxCursor ->
         FFI.getRawCommentText cxCursor >>= peekCString
+
+getAllChildren :: Cursor -> IO [Cursor]
+getAllChildren (Cursor tu ptr) = do
+    cursors <- newIORef []
+
+    let visitor cxCursor _ = do
+            cxCursor' <- FFI.dupCursor cxCursor
+            cursor <- Cursor tu <$> newForeignPtr FFI.p_free cxCursor'
+
+            modifyIORef' cursors $ \xs -> xs ++ [cursor]
+            return FFI.recurse
+
+    dynVisitor <- FFI.mkVisitor visitor
+    withForeignPtr ptr $ \cxCursor ->
+        FFI.visitChildren cxCursor dynVisitor
+
+    readIORef cursors
