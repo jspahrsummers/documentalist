@@ -1,5 +1,5 @@
 import Parser.Parseable
-import Parser.Clang.FFI
+import Parser.Clang.Internal
 
 main :: IO ()
 main = 
