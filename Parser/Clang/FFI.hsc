@@ -7,7 +7,6 @@ import Foreign
 import Foreign.C
 import Foreign.C.Types
 import Foreign.Ptr
-import Foreign.Storable
 
 #include <clang-c/Index.h>
 
