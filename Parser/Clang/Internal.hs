@@ -1,4 +1,12 @@
-module Parser.Clang.Internal where
+module Parser.Clang.Internal ( Index
+                             , newIndex
+                             , TranslationUnit
+                             , newTranslationUnit
+                             , Cursor
+                             , getCursor
+                             , getComment
+                             , getAllChildren
+                             ) where
 
 import Control.Applicative
 import Data.IORef
