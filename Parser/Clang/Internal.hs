@@ -109,9 +109,13 @@ readFileInRange (startLn, startCol) (endLn, endCol) file =
         readToLn startLn
         readToCol startCol
 
-        if startLn == endLn
-            then readToCol $ endCol - startCol
-            else liftM2 (++) (readToLn $ endLn - startLn) (readToCol endCol)
+        str <- if startLn == endLn
+                then readToCol $ endCol - startCol
+                else liftM2 (++) (readToLn $ endLn - startLn) (readToCol endCol)
+
+        -- The end column is inclusive, so read one more character.
+        c <- hGetChar fd
+        return $ str ++ [c]
 
 sourceStringAtCursor :: Cursor -> IO String
 sourceStringAtCursor (Cursor _ cursorPtr) = do
