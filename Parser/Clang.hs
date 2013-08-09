@@ -1,6 +1,7 @@
 module Parser.Clang ( SourceFile(..)
                     ) where
 
+import Control.Applicative
 import Control.Monad
 import Data.Maybe
 import Parser.Clang.Internal
@@ -17,12 +18,7 @@ instance Parseable SourceFile where
         tu <- newTranslationUnit ind path
 
         cursors <- getCursor tu >>= getAllChildren
-        declCursors <- filterM isDeclaration cursors
-
-        comments <- mapM getComment declCursors
-        print $ catMaybes comments
-
-        strings <- mapM sourceStringAtCursor declCursors
-        print $ catMaybes strings
+        decls <- catMaybes <$> mapM toDeclaration cursors
+        print decls
 
         return $ Left $ newErrorUnknown $ initialPos path

@@ -9,11 +9,13 @@ module Parser.Clang.Internal ( Index
                              , sourceStringAtCursor
                              , tokensAtCursor
                              , isDeclaration
+                             , toDeclaration
                              ) where
 
 import Control.Applicative
 import Control.Monad
 import Data.IORef
+import Data.Maybe
 import Foreign.C.String
 import Foreign.ForeignPtr
 import Foreign.Marshal.Alloc
@@ -29,6 +31,11 @@ data Cursor = Cursor TranslationUnit (ForeignPtr ())
 
 newtype Token = Token String
     deriving (Eq, Show)
+
+data Declaration = Declaration
+    { sourceString :: String
+    , comment :: Maybe String
+    } deriving (Eq, Show)
 
 newIndex :: IO Index
 newIndex = do
@@ -195,3 +202,12 @@ isDeclaration (Cursor _ cursorPtr) =
     withForeignPtr cursorPtr $ \cxCursor -> do
         b <- FFI.isDeclaration cxCursor
         return $ b /= 0
+
+toDeclaration :: Cursor -> IO (Maybe Declaration)
+toDeclaration cursor = do
+    b <- isDeclaration cursor
+    src <- sourceStringAtCursor cursor
+
+    if not b || isNothing src
+        then return Nothing
+        else getComment cursor >>= return . Just . Declaration (fromJust src)
