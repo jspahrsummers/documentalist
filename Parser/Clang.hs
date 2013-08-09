@@ -4,6 +4,7 @@ module Parser.Clang ( SourceFile(..)
 import Control.Applicative
 import Control.Monad
 import Data.Maybe
+import Parser.Clang.Declaration
 import Parser.Clang.Internal
 import Parser.Parseable
 import Text.ParserCombinators.Parsec.Error
