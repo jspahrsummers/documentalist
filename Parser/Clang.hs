@@ -16,7 +16,11 @@ instance Parseable SourceFile where
         ind <- newIndex
         tu <- newTranslationUnit ind path
         cursors <- getCursor tu >>= getAllChildren
-        comments <- mapM getComment cursors
 
+        comments <- mapM getComment cursors
         print $ catMaybes comments
+
+        tokensOnTokens <- mapM tokensAtCursor cursors
+        print tokensOnTokens
+
         return $ Left $ newErrorUnknown $ initialPos path

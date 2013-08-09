@@ -73,6 +73,9 @@ foreign import ccall unsafe "FFI_wrappers.h doc_getTokenSpellings"
 foreign import ccall unsafe "FFI_wrappers.h doc_disposeTokenSpellings"
     disposeTokenSpellings :: Ptr CString -> CUInt -> IO ()
 
+foreign import ccall unsafe "free"
+    free :: Ptr () -> IO ()
+
 foreign import ccall unsafe "&free"
     p_free :: FunPtr (Ptr () -> IO ())
 

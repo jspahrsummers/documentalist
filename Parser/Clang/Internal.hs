@@ -6,18 +6,25 @@ module Parser.Clang.Internal ( Index
                              , getCursor
                              , getComment
                              , getAllChildren
+                             , tokensAtCursor
                              ) where
 
 import Control.Applicative
 import Data.IORef
 import Foreign.C.String
 import Foreign.ForeignPtr
+import Foreign.Marshal.Alloc
+import Foreign.Marshal.Array
 import Foreign.Ptr
+import Foreign.Storable
 import qualified Parser.Clang.FFI as FFI
 
 newtype Index = Index (ForeignPtr ())
 data TranslationUnit = TranslationUnit Index (ForeignPtr ())
 data Cursor = Cursor TranslationUnit (ForeignPtr ())
+
+newtype Token = Token String
+    deriving (Eq, Show)
 
 newIndex :: IO Index
 newIndex = do
@@ -71,3 +78,24 @@ getAllChildren (Cursor tu ptr) = do
         FFI.visitChildren cxCursor dynVisitor
 
     readIORef cursors
+
+tokensAtCursor :: Cursor -> IO [Token]
+tokensAtCursor (Cursor (TranslationUnit _ tuPtr) cursorPtr) = do
+    range <- withForeignPtr cursorPtr $ \cxCursor ->
+        FFI.getCursorExtent cxCursor
+
+    strs <- withForeignPtr tuPtr $ \cxTU -> do
+        countPtr <- malloc
+        tokenSet <- FFI.tokenize cxTU range countPtr
+
+        count <- peek countPtr
+        spellings <- FFI.getTokenSpellings cxTU tokenSet count
+        FFI.disposeTokens cxTU tokenSet count
+
+        cStrs <- peekArray (fromInteger $ toInteger count) spellings
+        FFI.disposeTokenSpellings spellings count
+
+        mapM peekCString cStrs
+
+    FFI.free range
+    return $ map Token strs
