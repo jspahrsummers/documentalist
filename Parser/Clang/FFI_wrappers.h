@@ -7,6 +7,10 @@ CXSourceRange *doc_getCursorExtent(const CXCursor *cursor);
 CXToken *doc_tokenize(CXTranslationUnit unit, const CXSourceRange *range, unsigned *numTokens);
 char **doc_getTokenSpellings(CXTranslationUnit unit, const CXToken *tokens, unsigned numTokens);
 void doc_disposeTokenSpellings(char **spellings, unsigned numTokens);
+CXSourceLocation *doc_getRangeStart(const CXSourceRange *range);
+CXSourceLocation *doc_getRangeEnd(const CXSourceRange *range);
+CXFile *doc_getFileLocation(const CXSourceLocation *location, unsigned *line, unsigned *column, unsigned *offset);
+char *doc_getFileName(const CXFile *file);
 
 typedef enum CXChildVisitResult (*doc_CXCursorVisitor)(const CXCursor *cursor, const CXCursor *parent);
 unsigned doc_visitChildren(const CXCursor *cursor, doc_CXCursorVisitor visitor);

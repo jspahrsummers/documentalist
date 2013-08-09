@@ -11,7 +11,9 @@ import Foreign.Ptr
 #include <clang-c/Index.h>
 
 type CXCursor = Ptr ()
+type CXFile = Ptr ()
 type CXIndex = Ptr ()
+type CXSourceLocation = Ptr ()
 type CXSourceRange = Ptr ()
 type CXTokenSet = Ptr ()
 type CXTranslationUnit = Ptr ()
@@ -72,6 +74,18 @@ foreign import ccall unsafe "FFI_wrappers.h doc_getTokenSpellings"
 
 foreign import ccall unsafe "FFI_wrappers.h doc_disposeTokenSpellings"
     disposeTokenSpellings :: Ptr CString -> CUInt -> IO ()
+
+foreign import ccall unsafe "FFI_wrappers.h doc_getRangeStart"
+    getRangeStart :: CXSourceRange -> IO CXSourceLocation
+
+foreign import ccall unsafe "FFI_wrappers.h doc_getRangeEnd"
+    getRangeEnd :: CXSourceRange -> IO CXSourceLocation
+
+foreign import ccall unsafe "FFI_wrappers.h doc_getFileLocation"
+    getFileLocation :: CXSourceLocation -> Ptr CUInt -> Ptr CUInt -> Ptr CUInt -> IO CXFile
+
+foreign import ccall unsafe "FFI_wrappers.h doc_getFileName"
+    getFileName :: CXFile -> IO CString
 
 foreign import ccall unsafe "free"
     free :: Ptr () -> IO ()

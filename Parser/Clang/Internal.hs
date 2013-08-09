@@ -6,10 +6,12 @@ module Parser.Clang.Internal ( Index
                              , getCursor
                              , getComment
                              , getAllChildren
+                             , sourceStringAtCursor
                              , tokensAtCursor
                              ) where
 
 import Control.Applicative
+import Control.Monad
 import Data.IORef
 import Foreign.C.String
 import Foreign.ForeignPtr
@@ -18,6 +20,7 @@ import Foreign.Marshal.Array
 import Foreign.Ptr
 import Foreign.Storable
 import qualified Parser.Clang.FFI as FFI
+import System.IO
 
 newtype Index = Index (ForeignPtr ())
 data TranslationUnit = TranslationUnit Index (ForeignPtr ())
@@ -79,6 +82,64 @@ getAllChildren (Cursor tu ptr) = do
 
     readIORef cursors
 
+readFileInRange :: FilePath -> (Integer, Integer) -> (Integer, Integer) -> IO String
+readFileInRange file (startLn, startCol) (endLn, endCol) =
+    withFile file ReadMode $ \fd -> do
+        let readToLn 0 = error "Cannot skip to line 0"
+            readToLn 1 = return ""
+            readToLn ln = do
+                s <- hGetLine fd
+                t <- readToLn $ ln - 1
+                return $ s ++ t
+
+            readToCol 0 = error "Cannot skip to column 0"
+            readToCol 1 = return ""
+            readToCol col = do
+                c <- hGetChar fd
+                s <- readToCol $ col - 1
+                return $ c : s
+
+        readToLn startLn
+        readToCol startCol
+
+        if startLn == endLn
+            then readToCol $ endCol - startCol
+            else liftM2 (++) (readToLn $ endLn - startLn) (readToCol endCol)
+
+sourceStringAtCursor :: Cursor -> IO String
+sourceStringAtCursor (Cursor _ cursorPtr) = do
+    ex <- withForeignPtr cursorPtr $ \cxCursor ->
+        FFI.getCursorExtent cxCursor
+
+    start <- FFI.getRangeStart ex
+    end <- FFI.getRangeEnd ex
+    FFI.free ex
+
+    startLnPtr <- malloc
+    startColPtr <- malloc
+    file <- FFI.getFileLocation start startLnPtr startColPtr nullPtr
+    FFI.free start
+
+    startLn <- toInteger <$> peek startLnPtr
+    startCol <- toInteger <$> peek startColPtr
+    free startLnPtr
+    free startColPtr
+
+    endLnPtr <- malloc
+    endColPtr <- malloc
+    FFI.getFileLocation end endLnPtr endColPtr nullPtr
+    FFI.free end
+
+    endLn <- toInteger <$> peek endLnPtr
+    endCol <- toInteger <$> peek endColPtr
+    free endLnPtr
+    free endColPtr
+
+    filename <- FFI.getFileName file >>= peekCString
+    FFI.free file
+
+    readFileInRange filename (startLn, startCol) (endLn, endCol)
+
 tokensAtCursor :: Cursor -> IO [Token]
 tokensAtCursor (Cursor (TranslationUnit _ tuPtr) cursorPtr) = do
     range <- withForeignPtr cursorPtr $ \cxCursor ->
@@ -89,6 +150,8 @@ tokensAtCursor (Cursor (TranslationUnit _ tuPtr) cursorPtr) = do
         tokenSet <- FFI.tokenize cxTU range countPtr
 
         count <- peek countPtr
+        free countPtr
+
         spellings <- FFI.getTokenSpellings cxTU tokenSet count
         FFI.disposeTokens cxTU tokenSet count
 

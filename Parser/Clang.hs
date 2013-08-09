@@ -20,7 +20,7 @@ instance Parseable SourceFile where
         comments <- mapM getComment cursors
         print $ catMaybes comments
 
-        tokensOnTokens <- mapM tokensAtCursor cursors
-        print tokensOnTokens
+        strings <- mapM sourceStringAtCursor cursors
+        print strings
 
         return $ Left $ newErrorUnknown $ initialPos path

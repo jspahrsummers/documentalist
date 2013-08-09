@@ -57,6 +57,24 @@ void doc_disposeTokenSpellings(char **spellings, unsigned numTokens) {
 	free(spellings);
 }
 
+CXSourceLocation *doc_getRangeStart(const CXSourceRange *range) {
+	return doc_dupValue(clang_getRangeStart(*range));
+}
+
+CXSourceLocation *doc_getRangeEnd(const CXSourceRange *range) {
+	return doc_dupValue(clang_getRangeEnd(*range));
+}
+
+CXFile *doc_getFileLocation(const CXSourceLocation *location, unsigned *line, unsigned *column, unsigned *offset) {
+	CXFile file;
+	clang_getFileLocation(*location, &file, line, column, offset);
+	return doc_dupValue(file);
+}
+
+char *doc_getFileName(const CXFile *file) {
+	return doc_fromCXString(clang_getFileName(*file));
+}
+
 typedef struct {
 	doc_CXCursorVisitor visitor;
 } doc_visitorClientData;
