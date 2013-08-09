@@ -1,5 +1,7 @@
 ![I have no idea what I'm doing](https://i.chzbgr.com/maxW500/6675441920/h9395C28A/)
 
+### Stages
+
 The architecture should eventually look something like this:
 
  1. A **source language parser** (like Clang) locates documentation comments and the declarations to which they're attached.
