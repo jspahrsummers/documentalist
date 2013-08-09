@@ -37,6 +37,16 @@ data Declaration = Declaration
     , comment :: Maybe String
     } deriving (Eq, Show)
 
+toCStringArray :: [String] -> IO (Ptr CString, Int)
+toCStringArray strs = do
+    ptr <- mapM newCString strs >>= newArray
+    return (ptr, length strs)
+
+freeCStringArray :: (Ptr CString, Int) -> IO ()
+freeCStringArray (ptr, len) = do
+    cStrs <- peekArray len ptr
+    mapM_ free cStrs
+
 newIndex :: IO Index
 newIndex = do
     cxIdx <- FFI.createIndex 0 0
@@ -46,8 +56,12 @@ newIndex = do
 newTranslationUnit :: Index -> String -> IO TranslationUnit
 newTranslationUnit idx@(Index idxPtr) file = do
     cxTU <- withCString file $ \cStr ->
-        withForeignPtr idxPtr $ \cxIdx ->
-            FFI.parseTranslationUnit cxIdx cStr nullPtr 0 nullPtr 0 FFI.skipFunctionBodies
+        withForeignPtr idxPtr $ \cxIdx -> do
+            arr@(argv, argc) <- toCStringArray ["-ObjC"]
+            cxTU <- FFI.parseTranslationUnit cxIdx cStr argv (fromInteger $ toInteger argc) nullPtr 0 FFI.skipFunctionBodies
+
+            freeCStringArray arr
+            return cxTU
     
     ptr <- newForeignPtr FFI.p_disposeTranslationUnit cxTU
     return $ TranslationUnit idx ptr
