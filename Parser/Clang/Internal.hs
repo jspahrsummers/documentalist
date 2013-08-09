@@ -117,7 +117,7 @@ readFileInRange (startLn, startCol) (endLn, endCol) file =
         c <- hGetChar fd
         return $ str ++ [c]
 
-sourceStringAtCursor :: Cursor -> IO String
+sourceStringAtCursor :: Cursor -> IO (Maybe String)
 sourceStringAtCursor (Cursor _ cursorPtr) = do
     ex <- withForeignPtr cursorPtr $ \cxCursor ->
         FFI.getCursorExtent cxCursor
@@ -131,13 +131,13 @@ sourceStringAtCursor (Cursor _ cursorPtr) = do
 
     str <- if startIsNull == 0 && endIsNull == 0
             then sourceStringBetweenRanges start end
-            else return ""
+            else return Nothing
 
     FFI.free start
     FFI.free end
     return str
 
-sourceStringBetweenRanges :: FFI.CXSourceRange -> FFI.CXSourceRange -> IO String
+sourceStringBetweenRanges :: FFI.CXSourceRange -> FFI.CXSourceRange -> IO (Maybe String)
 sourceStringBetweenRanges start end = do
     startLnPtr <- malloc
     startColPtr <- malloc
@@ -160,11 +160,11 @@ sourceStringBetweenRanges start end = do
     filename <- FFI.getFileName file
     FFI.free file
 
-    str <- if filename == nullPtr
-            then return ""
-            else wrapCString filename >>= readFileInRange (startLn, startCol) (endLn, endCol)
-
-    return str
+    if filename == nullPtr
+        then return Nothing
+        else do
+            str <- wrapCString filename
+            Just <$> readFileInRange (startLn, startCol) (endLn, endCol) str
 
 tokensAtCursor :: Cursor -> IO [Token]
 tokensAtCursor (Cursor (TranslationUnit _ tuPtr) cursorPtr) = do

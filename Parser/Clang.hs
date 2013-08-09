@@ -21,6 +21,6 @@ instance Parseable SourceFile where
         print $ catMaybes comments
 
         strings <- mapM sourceStringAtCursor cursors
-        print strings
+        print $ catMaybes strings
 
         return $ Left $ newErrorUnknown $ initialPos path
