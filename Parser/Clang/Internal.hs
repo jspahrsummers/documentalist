@@ -44,6 +44,13 @@ newTranslationUnit idx@(Index idxPtr) file = do
     ptr <- newForeignPtr FFI.p_disposeTranslationUnit cxTU
     return $ TranslationUnit idx ptr
 
+wrapCString :: CString -> IO String
+wrapCString cStr = do
+    str <- peekCString cStr
+    FFI.free $ castPtr cStr
+
+    return str
+
 getCursor :: TranslationUnit -> IO Cursor
 getCursor tu@(TranslationUnit _ tuPtr) = do
     cxCursor <- withForeignPtr tuPtr $ \cxTU ->
@@ -58,7 +65,7 @@ getComment (Cursor _ ptr) =
             cStr <- FFI.getRawCommentText cxCursor
             if cStr == nullPtr
                 then return Nothing
-                else Just <$> peekCString cStr
+                else Just <$> wrapCString cStr
     in withForeignPtr ptr $ \cxCursor -> do
         isDecl <- FFI.isDeclaration cxCursor
         if isDecl == 0
@@ -82,8 +89,8 @@ getAllChildren (Cursor tu ptr) = do
 
     readIORef cursors
 
-readFileInRange :: FilePath -> (Integer, Integer) -> (Integer, Integer) -> IO String
-readFileInRange file (startLn, startCol) (endLn, endCol) =
+readFileInRange :: (Integer, Integer) -> (Integer, Integer) -> FilePath -> IO String
+readFileInRange (startLn, startCol) (endLn, endCol) file =
     withFile file ReadMode $ \fd -> do
         let readToLn 0 = error "Cannot skip to line 0"
             readToLn 1 = return ""
@@ -115,10 +122,22 @@ sourceStringAtCursor (Cursor _ cursorPtr) = do
     end <- FFI.getRangeEnd ex
     FFI.free ex
 
+    startIsNull <- FFI.isNullRange start
+    endIsNull <- FFI.isNullRange end
+
+    str <- if startIsNull == 0 && endIsNull == 0
+            then sourceStringBetweenRanges start end
+            else return ""
+
+    FFI.free start
+    FFI.free end
+    return str
+
+sourceStringBetweenRanges :: FFI.CXSourceRange -> FFI.CXSourceRange -> IO String
+sourceStringBetweenRanges start end = do
     startLnPtr <- malloc
     startColPtr <- malloc
     file <- FFI.getFileLocation start startLnPtr startColPtr nullPtr
-    FFI.free start
 
     startLn <- toInteger <$> peek startLnPtr
     startCol <- toInteger <$> peek startColPtr
@@ -128,17 +147,20 @@ sourceStringAtCursor (Cursor _ cursorPtr) = do
     endLnPtr <- malloc
     endColPtr <- malloc
     FFI.getFileLocation end endLnPtr endColPtr nullPtr
-    FFI.free end
 
     endLn <- toInteger <$> peek endLnPtr
     endCol <- toInteger <$> peek endColPtr
     free endLnPtr
     free endColPtr
 
-    filename <- FFI.getFileName file >>= peekCString
+    filename <- FFI.getFileName file
     FFI.free file
 
-    readFileInRange filename (startLn, startCol) (endLn, endCol)
+    str <- if filename == nullPtr
+            then return ""
+            else wrapCString filename >>= readFileInRange (startLn, startCol) (endLn, endCol)
+
+    return str
 
 tokensAtCursor :: Cursor -> IO [Token]
 tokensAtCursor (Cursor (TranslationUnit _ tuPtr) cursorPtr) = do
@@ -158,7 +180,7 @@ tokensAtCursor (Cursor (TranslationUnit _ tuPtr) cursorPtr) = do
         cStrs <- peekArray (fromInteger $ toInteger count) spellings
         FFI.disposeTokenSpellings spellings count
 
-        mapM peekCString cStrs
+        mapM wrapCString cStrs
 
     FFI.free range
     return $ map Token strs

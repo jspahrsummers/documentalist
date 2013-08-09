@@ -75,6 +75,10 @@ char *doc_getFileName(const CXFile *file) {
 	return doc_fromCXString(clang_getFileName(*file));
 }
 
+int doc_Range_isNull(const CXSourceRange *range) {
+	return clang_Range_isNull(*range);
+}
+
 typedef struct {
 	doc_CXCursorVisitor visitor;
 } doc_visitorClientData;

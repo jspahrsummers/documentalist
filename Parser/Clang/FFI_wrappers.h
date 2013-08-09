@@ -11,6 +11,7 @@ CXSourceLocation *doc_getRangeStart(const CXSourceRange *range);
 CXSourceLocation *doc_getRangeEnd(const CXSourceRange *range);
 CXFile *doc_getFileLocation(const CXSourceLocation *location, unsigned *line, unsigned *column, unsigned *offset);
 char *doc_getFileName(const CXFile *file);
+int doc_Range_isNull(const CXSourceRange *range);
 
 typedef enum CXChildVisitResult (*doc_CXCursorVisitor)(const CXCursor *cursor, const CXCursor *parent);
 unsigned doc_visitChildren(const CXCursor *cursor, doc_CXCursorVisitor visitor);

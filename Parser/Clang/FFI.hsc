@@ -87,6 +87,9 @@ foreign import ccall unsafe "FFI_wrappers.h doc_getFileLocation"
 foreign import ccall unsafe "FFI_wrappers.h doc_getFileName"
     getFileName :: CXFile -> IO CString
 
+foreign import ccall unsafe "FFI_wrappers.h doc_Range_isNull"
+    isNullRange :: CXSourceRange -> IO CInt
+
 foreign import ccall unsafe "free"
     free :: Ptr () -> IO ()
 
