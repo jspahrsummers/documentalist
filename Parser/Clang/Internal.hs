@@ -43,7 +43,7 @@ freeCStringArray (ptr, len) = do
 
 newIndex :: IO Index
 newIndex = do
-    cxIdx <- FFI.createIndex 0 0
+    cxIdx <- FFI.createIndex 1 0
     ptr <- newForeignPtr FFI.p_disposeIndex cxIdx
     return $ Index ptr
 
@@ -51,7 +51,7 @@ newTranslationUnit :: Index -> String -> IO TranslationUnit
 newTranslationUnit idx@(Index idxPtr) file = do
     cxTU <- withCString file $ \cStr ->
         withForeignPtr idxPtr $ \cxIdx -> do
-            arr@(argv, argc) <- toCStringArray ["-ObjC"]
+            arr@(argv, argc) <- toCStringArray ["-ObjC", "-nostdinc"]
             cxTU <- FFI.parseTranslationUnit cxIdx cStr argv (fromInteger $ toInteger argc) nullPtr 0 FFI.skipFunctionBodies
 
             freeCStringArray arr

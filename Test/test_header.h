@@ -1,3 +1,5 @@
+#import <Foundation/Foundation.h>
+
 /** Im in ur NSStrings */
 extern NSString * const DocumentingThingz;
 
