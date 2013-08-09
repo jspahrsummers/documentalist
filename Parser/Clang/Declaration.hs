@@ -9,7 +9,7 @@ import Parser.Clang.Internal
 data Declaration = Declaration
     { sourceString :: String
     , comment :: Maybe String
-    } deriving (Eq, Show)
+    } deriving Eq
 
 toDeclaration :: Cursor -> IO (Maybe Declaration)
 toDeclaration cursor = do
@@ -19,3 +19,6 @@ toDeclaration cursor = do
     if not b || isNothing src
         then return Nothing
         else getComment cursor >>= return . Just . Declaration (fromJust src)
+
+instance Show Declaration where
+    show d = "Declaration {\n\tcomment: " ++ fromMaybe "" (comment d) ++ "\n\tcode: " ++ sourceString d ++ "\n}"
