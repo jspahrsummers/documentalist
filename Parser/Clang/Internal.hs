@@ -8,6 +8,7 @@ module Parser.Clang.Internal ( Index
                              , getAllChildren
                              , sourceStringAtCursor
                              , tokensAtCursor
+                             , isDeclaration
                              ) where
 
 import Control.Applicative
@@ -60,17 +61,17 @@ getCursor tu@(TranslationUnit _ tuPtr) = do
     return $ Cursor tu ptr
 
 getComment :: Cursor -> IO (Maybe String)
-getComment (Cursor _ ptr) =
+getComment cursor@(Cursor _ ptr) =
     let rawComment cxCursor = do
             cStr <- FFI.getRawCommentText cxCursor
             if cStr == nullPtr
                 then return Nothing
                 else Just <$> wrapCString cStr
-    in withForeignPtr ptr $ \cxCursor -> do
-        isDecl <- FFI.isDeclaration cxCursor
-        if isDecl == 0
-            then return Nothing
-            else rawComment cxCursor
+    in do
+        isDecl <- isDeclaration cursor
+        if isDecl
+            then withForeignPtr ptr $ \cxCursor -> rawComment cxCursor
+            else return Nothing
 
 getAllChildren :: Cursor -> IO [Cursor]
 getAllChildren (Cursor tu ptr) = do
@@ -188,3 +189,9 @@ tokensAtCursor (Cursor (TranslationUnit _ tuPtr) cursorPtr) = do
 
     FFI.free range
     return $ map Token strs
+
+isDeclaration :: Cursor -> IO Bool
+isDeclaration (Cursor _ cursorPtr) =
+    withForeignPtr cursorPtr $ \cxCursor -> do
+        b <- FFI.isDeclaration cxCursor
+        return $ b /= 0

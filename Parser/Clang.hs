@@ -15,12 +15,14 @@ instance Parseable SourceFile where
     parse (SourceFile path) = do
         ind <- newIndex
         tu <- newTranslationUnit ind path
-        cursors <- getCursor tu >>= getAllChildren
 
-        comments <- mapM getComment cursors
+        cursors <- getCursor tu >>= getAllChildren
+        declCursors <- filterM isDeclaration cursors
+
+        comments <- mapM getComment declCursors
         print $ catMaybes comments
 
-        strings <- mapM sourceStringAtCursor cursors
+        strings <- mapM sourceStringAtCursor declCursors
         print $ catMaybes strings
 
         return $ Left $ newErrorUnknown $ initialPos path
