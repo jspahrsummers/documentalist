@@ -23,6 +23,15 @@ Each stage should depend only on the previous, such that the `CommentParser` has
 no knowledge of the source language, and the `Writer` has no knowledge of the
 documentation syntax or source language.
 
+### Building Concrete Implementations
+
+To make a new implementation for a stage, simply create an instance of the
+respective typeclass.
+
+If the implementation is meant to be part of Documentalist proper, make sure to
+follow the existing module structure, and add the new module(s) to [the package
+description](documentalist.cabal).
+
 ## Getting Started
 
 ```
