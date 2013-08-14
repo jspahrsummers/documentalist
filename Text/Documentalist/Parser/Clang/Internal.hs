@@ -1,15 +1,15 @@
-module Parser.Clang.Internal ( Index
-                             , newIndex
-                             , TranslationUnit
-                             , newTranslationUnit
-                             , Cursor(..)
-                             , getCursor
-                             , getComment
-                             , getAllChildren
-                             , sourceStringAtCursor
-                             , tokensAtCursor
-                             , isDeclaration
-                             ) where
+module Text.Documentalist.Parser.Clang.Internal ( Index
+                                                , newIndex
+                                                , TranslationUnit
+                                                , newTranslationUnit
+                                                , Cursor(..)
+                                                , getCursor
+                                                , getComment
+                                                , getAllChildren
+                                                , sourceStringAtCursor
+                                                , tokensAtCursor
+                                                , isDeclaration
+                                                ) where
 
 import Control.Applicative
 import Control.Monad
@@ -21,8 +21,8 @@ import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
 import Foreign.Ptr
 import Foreign.Storable
-import qualified Parser.Clang.FFI as FFI
 import System.IO
+import qualified Text.Documentalist.Parser.Clang.FFI as FFI
 
 newtype Index = Index (ForeignPtr ())
 data TranslationUnit = TranslationUnit Index (ForeignPtr ())

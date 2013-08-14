@@ -1,7 +1,7 @@
-module Parser.Parseable ( Parseable(..)
-                        ) where
+module Text.Documentalist.Parser.Parseable ( Parseable(..)
+                                           ) where
 
-import IL
+import Text.Documentalist.IL
 import Text.ParserCombinators.Parsec.Error
 
 -- | Represents a parser for any frontend language.

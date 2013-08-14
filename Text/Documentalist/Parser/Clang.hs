@@ -1,14 +1,14 @@
-module Parser.Clang ( SourceFile(..)
-                    ) where
+module Text.Documentalist.Parser.Clang ( SourceFile(..)
+                                       ) where
 
 import Control.Applicative
 import Control.Monad
 import Data.Maybe
 import Foreign.ForeignPtr
-import Parser.Clang.Declaration
-import qualified Parser.Clang.FFI as FFI
-import Parser.Clang.Internal
-import Parser.Parseable
+import Text.Documentalist.Parser.Clang.Declaration
+import qualified Text.Documentalist.Parser.Clang.FFI as FFI
+import Text.Documentalist.Parser.Clang.Internal
+import Text.Documentalist.Parser.Parseable
 import Text.ParserCombinators.Parsec.Error
 import Text.ParserCombinators.Parsec.Pos
 

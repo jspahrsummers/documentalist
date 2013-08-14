@@ -14,17 +14,27 @@ copyright:      Copyright (c) 2013 Justin Spahr-Summers
 cabal-version:  >= 1.16
 build-type:     Simple
 
-executable documentalist
+library
   default-language:   Haskell2010
+  exposed-modules:    Text.Documentalist
+                      Text.Documentalist.IL
+                      Text.Documentalist.Parser.Clang Text.Documentalist.Parser.Clang.Declaration
+                      Text.Documentalist.Parser.Parseable
   build-depends:      base >= 4.6 && < 5,
                       parsec >= 3.1.3
-  main-is:            Main.hs
   extra-libraries:    clang
   extra-lib-dirs:     /usr/local/lib
   include-dirs:       /usr/local/include
-  c-sources:          Parser/Clang/FFI_wrappers.c
-  other-modules:      Parser.Clang.FFI
+  c-sources:          Text/Documentalist/Parser/Clang/FFI_wrappers.c
+  other-modules:      Text.Documentalist.Parser.Clang.FFI
   build-tools:        hsc2hs
+
+executable documentalist
+  default-language:   Haskell2010
+  build-depends:      base >= 4.6 && < 5,
+                      parsec >= 3.1.3,
+                      documentalist
+  main-is:            Main.hs
 
 source-repository head
   type:     git

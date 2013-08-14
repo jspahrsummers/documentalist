@@ -1,12 +1,12 @@
-module IL ( Entity(..)
-          , Module(..)
-          , Block(..)
-          , Paragraph(..)
-          , Span(..)
-          , Code(..)
-          , Parameter(..)
-          , Result(..)
-          ) where
+module Text.Documentalist.IL ( Entity(..)
+                             , Module(..)
+                             , Block(..)
+                             , Paragraph(..)
+                             , Span(..)
+                             , Code(..)
+                             , Parameter(..)
+                             , Result(..)
+                             ) where
 
 -- | Represents any linkable and documentable thing.
 newtype Entity = Entity String
