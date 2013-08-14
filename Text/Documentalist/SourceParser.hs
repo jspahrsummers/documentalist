@@ -1,5 +1,6 @@
 module Text.Documentalist.SourceParser where
 
+import Control.Exception
 import Data.Map.Strict
 
 -- | An identifier, as it would be written in the source language.
@@ -52,3 +53,10 @@ data Module = Module String [Declaration]
 -- | A package to treat as a single unit for the purposes of documentation generation.
 data Package = Package String [Module]
     deriving (Eq, Ord, Show)
+
+-- | Represents a unparsed package in a source language.
+class SourcePackage p where
+    -- | Parses the package into a language-independent form.
+    --
+    --   Errors may be indicated with `IOException`s.
+    parse :: p -> IO Package
