@@ -3,6 +3,15 @@
 Documentalist is an extensible documentation generator that is meant to support
 multiple source languages, documentation syntaxes, and output formats.
 
+The project includes both a library and executable component:
+
+ * The **library** is the main focus of development, and will include most of
+   the logic. The goal is to support embedded documentation generation
+   capabilities in other programs.
+ * The **executable** is intended to be a simple front-end that automatically
+   hooks up [stages](#stages) for generating pretty documentation output from
+   a chosen source language.
+
 ## Stages
 
 The architecture is split into three major stages.
