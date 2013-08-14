@@ -79,6 +79,10 @@ int doc_Range_isNull(const CXSourceRange *range) {
 	return clang_Range_isNull(*range);
 }
 
+enum CXCursorKind doc_getCursorKind(const CXCursor *cursor) {
+	return clang_getCursorKind(*cursor);
+}
+
 typedef struct {
 	doc_CXCursorVisitor visitor;
 } doc_visitorClientData;

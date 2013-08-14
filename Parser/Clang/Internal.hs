@@ -2,7 +2,7 @@ module Parser.Clang.Internal ( Index
                              , newIndex
                              , TranslationUnit
                              , newTranslationUnit
-                             , Cursor
+                             , Cursor(..)
                              , getCursor
                              , getComment
                              , getAllChildren
