@@ -1,6 +1,4 @@
-![I have no idea what I'm doing](https://i.chzbgr.com/maxW500/6675441920/h9395C28A/)
-
-### Stages
+# documentalist
 
 The architecture should eventually look something like this:
 
