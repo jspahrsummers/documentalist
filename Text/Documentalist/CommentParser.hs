@@ -1,5 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
-
+{-# LANGUAGE MultiParamTypeClasses #-}
 module Text.Documentalist.CommentParser where
 
 import Control.Monad.Error.Class
@@ -44,18 +43,8 @@ newtype Result = Result [Span]
     deriving (Eq, Show)
 
 -- | A monad capable of parsing a specific 'Comment' syntax.
-class MonadError ParseError p => CommentParser p where
+class MonadError e p => CommentParser e p where
     -- | Parses the comments in the given package into 'DocBlock's.
     --
     --   Any errors will be indicated using @throwError@.
     parse :: Package Comment -> p (Package DocBlock)
-
--- | An error that occurs during comment parsing.
-data ParseError = ParseError
-    { message :: String
-    , inputComment :: Maybe Comment
-    , inputModule :: Maybe (Module Comment)
-    } deriving (Eq, Show)
-
-instance Error ParseError where
-    strMsg s = ParseError { message = s, inputComment = Nothing, inputModule = Nothing }
