@@ -1,16 +1,14 @@
-module Text.Documentalist.Parser.Clang ( SourceFile(..)
-                                       ) where
+module Text.Documentalist.SourceParser.Clang ( SourceFile(..)
+                                             ) where
 
 import Control.Applicative
 import Control.Monad
 import Data.Maybe
 import Foreign.ForeignPtr
-import Text.Documentalist.Parser.Clang.Declaration
-import qualified Text.Documentalist.Parser.Clang.FFI as FFI
-import Text.Documentalist.Parser.Clang.Internal
-import Text.Documentalist.Parser.Parseable
-import Text.ParserCombinators.Parsec.Error
-import Text.ParserCombinators.Parsec.Pos
+import Text.Documentalist.SourceParser
+import Text.Documentalist.SourceParser.Clang.Declaration
+import qualified Text.Documentalist.SourceParser.Clang.FFI as FFI
+import Text.Documentalist.SourceParser.Clang.Internal
 
 newtype SourceFile = SourceFile String
     deriving (Eq, Show)
@@ -23,7 +21,7 @@ cursorInfo c@(Cursor _ cursorPtr) = do
     str <- sourceStringAtCursor c
     return $ maybe Nothing (Just . (,) kind) str
 
-instance Parseable SourceFile where
+instance SourcePackage SourceFile where
     parse (SourceFile path) = do
         ind <- newIndex
         tu <- newTranslationUnit ind path
@@ -32,4 +30,4 @@ instance Parseable SourceFile where
         infos <- catMaybes <$> mapM cursorInfo cursors
         print infos
 
-        return $ Left $ newErrorUnknown $ initialPos path
+        return $ Package "" [] 

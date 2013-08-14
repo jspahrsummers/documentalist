@@ -11,12 +11,6 @@ newtype Identifier = Identifier String
 newtype Type = Type String
     deriving (Eq, Ord, Show)
 
--- | The meaningful body of a comment in the source language.
---
---   This string should be preprocessed to remove markers, like -- in Haskell or // in C.
-newtype Comment = Comment String
-    deriving (Eq, Ord, Show)
-
 -- | Represents a list of types (or just a single type) that another type derives from.
 type SuperTypes = [Type]
 
@@ -28,9 +22,6 @@ type UnderlyingType = Maybe Type
 
 -- | Maps declarations to language-specific annotations.
 type AnnotationMap = Map Declaration [String]
-
--- | Maps declarations to their documentation comments.
-type CommentMap = Map Declaration (Maybe Comment)
 
 -- | Any kind of documentable declaration.
 data Declaration = Class Identifier SuperTypes [Declaration]            -- ^ A class declaration.
@@ -46,12 +37,23 @@ data Declaration = Class Identifier SuperTypes [Declaration]            -- ^ A c
                  | TypeAlias Identifier Type                            -- ^ A redeclaration of a type under a different name.
                  deriving (Eq, Ord, Show)
 
+-- | The meaningful body of a comment in the source language.
+--
+--   This string should be preprocessed to remove markers, like -- in Haskell or // in C.
+newtype Comment = Comment String
+    deriving (Eq, Show)
+
+-- | Maps declarations to optional values of type @t@, which should represent some kind
+--   of comment or documentation data.
+newtype DeclMap t = DeclCommentMap (Map Declaration (Maybe t))
+    deriving (Eq, Ord, Show)
+
 -- | A single module in the source language.
-data Module = Module String [Declaration]
+data Module t = Module String (DeclMap t)
     deriving (Eq, Ord, Show)
 
 -- | A package to treat as a single unit for the purposes of documentation generation.
-data Package = Package String [Module]
+data Package t = Package String [Module t]
     deriving (Eq, Ord, Show)
 
 -- | Represents a unparsed package in a source language.
@@ -59,4 +61,4 @@ class SourcePackage p where
     -- | Parses the package into a language-independent form.
     --
     --   Errors may be indicated with `IOException`s.
-    parse :: p -> IO Package
+    parse :: p -> IO (Package Comment)

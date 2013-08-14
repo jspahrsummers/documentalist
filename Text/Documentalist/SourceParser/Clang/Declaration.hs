@@ -1,10 +1,10 @@
-module Text.Documentalist.Parser.Clang.Declaration ( Declaration(..)
-                                                   , isDeclaration
-                                                   , toDeclaration
-                                                   ) where
+module Text.Documentalist.SourceParser.Clang.Declaration ( Declaration(..)
+                                                         , isDeclaration
+                                                         , toDeclaration
+                                                         ) where
 
 import Data.Maybe
-import Text.Documentalist.Parser.Clang.Internal
+import Text.Documentalist.SourceParser.Clang.Internal
 
 data Declaration = Declaration
     { sourceString :: String

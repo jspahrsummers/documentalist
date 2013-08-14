@@ -1,6 +1,6 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
-module Text.Documentalist.Parser.Clang.FFI where
+module Text.Documentalist.SourceParser.Clang.FFI where
 
 import Control.Applicative
 import Foreign
