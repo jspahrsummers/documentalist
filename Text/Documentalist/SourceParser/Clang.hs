@@ -1,4 +1,5 @@
 module Text.Documentalist.SourceParser.Clang ( SourceFile
+                                             , newSourceFile
                                              ) where
 
 import Control.Applicative
