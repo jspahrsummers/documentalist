@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module Text.Documentalist.SourceParser.Clang.Internal ( Index
                                                       , newIndex
                                                       , TranslationUnit
@@ -24,30 +25,45 @@ import Foreign.Storable
 import System.IO
 import qualified Text.Documentalist.SourceParser.Clang.FFI as FFI
 
+-- | Represents a collection of translation units.
 newtype Index = Index (ForeignPtr ())
+
+-- | A translation unit, which roughly corresponds to one source file.
 data TranslationUnit = TranslationUnit Index (ForeignPtr ())
+
+-- | A movable cursor into a translation unit.
 data Cursor = Cursor TranslationUnit (ForeignPtr ())
 
+-- | A string from the source file that represents a token.
 newtype Token = Token String
     deriving (Eq, Show)
 
-toCStringArray :: [String] -> IO (Ptr CString, Int)
+-- | Builds an array of C strings.
+--
+--   The result must be freed using 'freeCStringArray' once you are done using it.
+toCStringArray
+    :: [String]                 -- ^ The input strings.
+    -> IO (Ptr CString, Int)    -- ^ The C string array, and number of elements.
+
 toCStringArray strs = do
     ptr <- mapM newCString strs >>= newArray
     return (ptr, length strs)
 
+-- | Frees an array of C strings created with 'toCStringArray'.
 freeCStringArray :: (Ptr CString, Int) -> IO ()
 freeCStringArray (ptr, len) = do
     cStrs <- peekArray len ptr
     mapM_ free cStrs
 
+-- | Creates an empty index that will automatically exclude declarations from PCH files.
 newIndex :: IO Index
 newIndex = do
     cxIdx <- FFI.createIndex 1 0
     ptr <- newForeignPtr FFI.p_disposeIndex cxIdx
     return $ Index ptr
 
-newTranslationUnit :: Index -> String -> IO TranslationUnit
+-- | Creates a translation unit from a source file, and adds it to an index.
+newTranslationUnit :: Index -> FilePath -> IO TranslationUnit
 newTranslationUnit idx@(Index idxPtr) file = do
     cxTU <- withCString file $ \cStr ->
         withForeignPtr idxPtr $ \cxIdx -> do
@@ -60,6 +76,7 @@ newTranslationUnit idx@(Index idxPtr) file = do
     ptr <- newForeignPtr FFI.p_disposeTranslationUnit cxTU
     return $ TranslationUnit idx ptr
 
+-- | Converts a C string into a Haskell string, then frees the input.
 wrapCString :: CString -> IO String
 wrapCString cStr = do
     str <- peekCString cStr
@@ -67,6 +84,7 @@ wrapCString cStr = do
 
     return str
 
+-- | Creates a cursor that begins at the level of a translation unit.
 getCursor :: TranslationUnit -> IO Cursor
 getCursor tu@(TranslationUnit _ tuPtr) = do
     cxCursor <- withForeignPtr tuPtr $ \cxTU ->
@@ -75,9 +93,11 @@ getCursor tu@(TranslationUnit _ tuPtr) = do
     ptr <- newForeignPtr FFI.p_free cxCursor
     return $ Cursor tu ptr
 
+-- | Gets the comment associated with the declaration at a cursor, if any.
 getComment :: Cursor -> IO (Maybe String)
 getComment cursor@(Cursor _ ptr) =
-    let rawComment cxCursor = do
+    let rawComment :: FFI.CXCursor -> IO (Maybe String)
+        rawComment cxCursor = do
             cStr <- FFI.getRawCommentText cxCursor
             if cStr == nullPtr
                 then return Nothing
@@ -88,11 +108,13 @@ getComment cursor@(Cursor _ ptr) =
             then withForeignPtr ptr $ \cxCursor -> rawComment cxCursor
             else return Nothing
 
+-- | Recursively creates cursors for all children of a given cursor.
 getAllChildren :: Cursor -> IO [Cursor]
 getAllChildren (Cursor tu ptr) = do
     cursors <- newIORef []
 
-    let visitor cxCursor _ = do
+    let visitor :: FFI.CXVisitor
+        visitor cxCursor _ = do
             cxCursor' <- FFI.dupCursor cxCursor
             cursor <- Cursor tu <$> newForeignPtr FFI.p_free cxCursor'
 
@@ -105,16 +127,24 @@ getAllChildren (Cursor tu ptr) = do
 
     readIORef cursors
 
-readFileInRange :: (Integer, Integer) -> (Integer, Integer) -> FilePath -> IO String
+-- | Reads between two source locations in a file.
+readFileInRange
+    :: (Integer, Integer)   -- ^ The 1-indexed line and column of the first character to read.
+    -> (Integer, Integer)   -- ^ The 1-indexed line and column of the last character to read.
+    -> FilePath             -- ^ The file to read from.
+    -> IO String
+
 readFileInRange (startLn, startCol) (endLn, endCol) file =
     withFile file ReadMode $ \fd -> do
-        let readToLn 0 = error "Cannot skip to line 0"
+        let readToLn :: Integer -> IO String
+            readToLn 0 = error "Cannot skip to line 0"
             readToLn 1 = return ""
             readToLn ln = do
                 s <- hGetLine fd
                 t <- readToLn $ ln - 1
                 return $ s ++ t
 
+            readToCol :: Integer -> IO String
             readToCol 0 = error "Cannot skip to column 0"
             readToCol 1 = return ""
             readToCol col = do
@@ -133,55 +163,57 @@ readFileInRange (startLn, startCol) (endLn, endCol) file =
         c <- hGetChar fd
         return $ str ++ [c]
 
+-- | Gets the string of source code associated with a cursor, if any.
 sourceStringAtCursor :: Cursor -> IO (Maybe String)
-sourceStringAtCursor (Cursor _ cursorPtr) = do
-    ex <- withForeignPtr cursorPtr $ \cxCursor ->
-        FFI.getCursorExtent cxCursor
+sourceStringAtCursor (Cursor _ cursorPtr) =
+    let sourceStringBetweenRanges :: FFI.CXSourceRange -> FFI.CXSourceRange -> IO (Maybe String)
+        sourceStringBetweenRanges start end = do
+            startLnPtr <- malloc
+            startColPtr <- malloc
+            file <- FFI.getFileLocation start startLnPtr startColPtr nullPtr
 
-    start <- FFI.getRangeStart ex
-    end <- FFI.getRangeEnd ex
-    FFI.free ex
+            startLn <- toInteger <$> peek startLnPtr
+            startCol <- toInteger <$> peek startColPtr
+            free startLnPtr
+            free startColPtr
 
-    startIsNull <- FFI.isNullRange start
-    endIsNull <- FFI.isNullRange end
+            endLnPtr <- malloc
+            endColPtr <- malloc
+            FFI.getFileLocation end endLnPtr endColPtr nullPtr
 
-    str <- if startIsNull == 0 && endIsNull == 0
-            then sourceStringBetweenRanges start end
-            else return Nothing
+            endLn <- toInteger <$> peek endLnPtr
+            endCol <- toInteger <$> peek endColPtr
+            free endLnPtr
+            free endColPtr
 
-    FFI.free start
-    FFI.free end
-    return str
+            filename <- FFI.getFileName file
+            FFI.free file
 
-sourceStringBetweenRanges :: FFI.CXSourceRange -> FFI.CXSourceRange -> IO (Maybe String)
-sourceStringBetweenRanges start end = do
-    startLnPtr <- malloc
-    startColPtr <- malloc
-    file <- FFI.getFileLocation start startLnPtr startColPtr nullPtr
+            if filename == nullPtr
+                then return Nothing
+                else do
+                    str <- wrapCString filename
+                    Just <$> readFileInRange (startLn, startCol) (endLn, endCol) str
+    in do
+        ex <- withForeignPtr cursorPtr $ \cxCursor ->
+            FFI.getCursorExtent cxCursor
 
-    startLn <- toInteger <$> peek startLnPtr
-    startCol <- toInteger <$> peek startColPtr
-    free startLnPtr
-    free startColPtr
+        start <- FFI.getRangeStart ex
+        end <- FFI.getRangeEnd ex
+        FFI.free ex
 
-    endLnPtr <- malloc
-    endColPtr <- malloc
-    FFI.getFileLocation end endLnPtr endColPtr nullPtr
+        startIsNull <- FFI.isNullRange start
+        endIsNull <- FFI.isNullRange end
 
-    endLn <- toInteger <$> peek endLnPtr
-    endCol <- toInteger <$> peek endColPtr
-    free endLnPtr
-    free endColPtr
+        str <- if startIsNull == 0 && endIsNull == 0
+                then sourceStringBetweenRanges start end
+                else return Nothing
 
-    filename <- FFI.getFileName file
-    FFI.free file
+        FFI.free start
+        FFI.free end
+        return str
 
-    if filename == nullPtr
-        then return Nothing
-        else do
-            str <- wrapCString filename
-            Just <$> readFileInRange (startLn, startCol) (endLn, endCol) str
-
+-- | Creates tokens for the source code associated with a cursor, if any.
 tokensAtCursor :: Cursor -> IO [Token]
 tokensAtCursor (Cursor (TranslationUnit _ tuPtr) cursorPtr) = do
     range <- withForeignPtr cursorPtr $ \cxCursor ->
@@ -205,6 +237,7 @@ tokensAtCursor (Cursor (TranslationUnit _ tuPtr) cursorPtr) = do
     FFI.free range
     return $ map Token strs
 
+-- | Returns whether a cursor refers to a declaration.
 isDeclaration :: Cursor -> IO Bool
 isDeclaration (Cursor _ cursorPtr) =
     withForeignPtr cursorPtr $ \cxCursor -> do
