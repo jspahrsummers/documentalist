@@ -118,7 +118,7 @@ getAllChildren (Cursor tu ptr) = do
             cxCursor' <- FFI.dupCursor cxCursor
             cursor <- Cursor tu <$> newForeignPtr FFI.p_free cxCursor'
 
-            modifyIORef' cursors $ \xs -> xs ++ [cursor]
+            modifyIORef cursors $ \xs -> xs ++ [cursor]
             return FFI.recurse
 
     dynVisitor <- FFI.mkVisitor visitor
