@@ -1,33 +1,36 @@
-module Text.Documentalist.SourceParser.Clang ( SourceFile(..)
+module Text.Documentalist.SourceParser.Clang ( SourceFile
                                              ) where
 
 import Control.Applicative
 import Control.Monad
+import Data.Map.Strict as Map
 import Data.Maybe
 import Foreign.ForeignPtr
+import System.IO
 import Text.Documentalist.SourceParser
 import Text.Documentalist.SourceParser.Clang.Declaration
-import qualified Text.Documentalist.SourceParser.Clang.FFI as FFI
 import Text.Documentalist.SourceParser.Clang.Internal
 
-newtype SourceFile = SourceFile String
-    deriving (Eq, Show)
+-- | A file in a source language supported by Clang.
+data SourceFile = SourceFile
+    { filePath :: FilePath
+    , translationUnit :: TranslationUnit
+    }
 
-cursorInfo :: Cursor -> IO (Maybe (FFI.CXCursorKind, String))
-cursorInfo c@(Cursor _ cursorPtr) = do
-    kind <- withForeignPtr cursorPtr $ \cxCursor ->
-        FFI.getCursorKind cxCursor
-
-    str <- sourceStringAtCursor c
-    return $ maybe Nothing (Just . (,) kind) str
+instance Show SourceFile where
+    show = show . filePath
 
 instance SourcePackage SourceFile where
-    parse (SourceFile path) = do
-        ind <- newIndex
-        tu <- newTranslationUnit ind path
+    parse src = do
+        cursors <- getCursor (translationUnit src) >>= getAllChildren
+        comments <- mapM getComment cursors
+        print $ catMaybes comments
 
-        cursors <- getCursor tu >>= getAllChildren
-        infos <- catMaybes <$> mapM cursorInfo cursors
-        print infos
+        let mod = Module (filePath src) $ DeclMap Map.empty
+        return $ Package "" [mod]
 
-        return $ Package "" [] 
+-- | Creates a Clang 'SourceFile' from a file on disk.
+newSourceFile :: FilePath -> IO SourceFile
+newSourceFile path = do
+    tu <- newIndex >>= newTranslationUnit path
+    return SourceFile { translationUnit = tu, filePath = path }

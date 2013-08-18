@@ -1,5 +1,4 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
-
 module Text.Documentalist.SourceParser.Clang.FFI where
 
 import Control.Applicative
@@ -18,6 +17,9 @@ type CXSourceRange = Ptr ()
 type CXTokenSet = Ptr ()
 type CXTranslationUnit = Ptr ()
 type CXUnsavedFile = Ptr ()
+
+-- | The type of a function that can visit a cursor's children.
+type CXVisitor = CXCursor -> CXCursor -> IO CXChildVisitResult
 
 newtype CXTranslationUnitOption = CXTranslationUnitOption { unCXTranslationUnitOption :: CUInt }
     deriving (Eq, Show)
@@ -121,8 +123,6 @@ foreign import ccall unsafe "free"
 
 foreign import ccall unsafe "&free"
     p_free :: FunPtr (Ptr () -> IO ())
-
-type CXVisitor = CXCursor -> CXCursor -> IO CXChildVisitResult
 
 foreign import ccall safe "FFI_wrappers.h doc_visitChildren"
     visitChildren :: CXCursor -> FunPtr CXVisitor -> IO CUInt
