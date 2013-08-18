@@ -98,5 +98,5 @@ unsigned doc_visitChildren(const CXCursor *cursor, doc_CXCursorVisitor visitor) 
 }
 
 CXCursor *doc_dupCursor(const CXCursor *cursor) {
-	return doc_dupValue((CXCursor *)cursor);
+	return doc_dupValue((CXCursor)*cursor);
 }
