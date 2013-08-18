@@ -19,7 +19,7 @@ library
   exposed-modules:    Text.Documentalist
                       Text.Documentalist.CommentParser
                       Text.Documentalist.SourceParser
-                      Text.Documentalist.SourceParser.Clang Text.Documentalist.SourceParser.Clang.Declaration
+                      Text.Documentalist.SourceParser.Clang
                       Text.Documentalist.Writer
   build-depends:      base >= 4.5 && < 5,
                       containers >= 0.5,

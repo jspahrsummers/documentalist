@@ -8,7 +8,6 @@ import Data.Maybe
 import Foreign.ForeignPtr
 import System.IO
 import Text.Documentalist.SourceParser
-import Text.Documentalist.SourceParser.Clang.Declaration
 import Text.Documentalist.SourceParser.Clang.Internal
 
 -- | A file in a source language supported by Clang.
