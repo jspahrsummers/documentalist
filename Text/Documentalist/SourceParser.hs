@@ -45,7 +45,7 @@ newtype Comment = Comment String
 
 -- | Maps declarations to optional values of type @t@, which should represent some kind
 --   of comment or documentation data.
-newtype DeclMap t = DeclCommentMap (Map Declaration (Maybe t))
+newtype DeclMap t = DeclMap (Map Declaration (Maybe t))
     deriving (Eq, Ord, Show)
 
 -- | A single module in the source language.
