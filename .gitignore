@@ -5,5 +5,3 @@ cabal-dev
 *.chi
 *.chs.h
 .virthualenv
-*.cache
-config*
