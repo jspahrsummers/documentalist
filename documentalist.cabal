@@ -27,7 +27,7 @@ library
                       transformers >= 0.3
   extra-libraries:    clang
   extra-lib-dirs:     /usr/local/lib
-  include-dirs:       /usr/local/include
+  include-dirs:       /usr/local/include /usr/include/clang-c
   cc-options:         -std=c99
   c-sources:          Text/Documentalist/SourceParser/Clang/FFI_wrappers.c
   other-modules:      Text.Documentalist.SourceParser.Clang.FFI
