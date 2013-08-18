@@ -34,7 +34,7 @@ AC_INIT([documentalist], [0.1])
 AC_CONFIG_SRCDIR([Text/Documentalist.hs])
 
 AC_ARG_WITH([llvm-config], [AS_HELP_STRING([--with-llvm-config],[configure LLVM libraries with llvm-config @<:@default: yes@:>@])], [llvm_config=${withval}], [llvm_config=yes])
-AC_CHECK_PROG([llvm_config_found], [llvm-config], [yes], [no])
+AC_CHECK_PROG([llvm_config_found], [llvm-config], [yes], [no], ["/usr/lib/llvm-3.3/bin"])
 if test "$llvm_config" = yes
 then
 	if test "$llvm_config_found" = no

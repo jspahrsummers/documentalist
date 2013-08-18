@@ -2046,7 +2046,7 @@ else
   ac_cv_prog_llvm_config_found="$llvm_config_found" # Let the user override the test.
 else
 as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
+for as_dir in "/usr/lib/llvm-3.3/bin"
 do
   IFS=$as_save_IFS
   test -z "$as_dir" && as_dir=.
