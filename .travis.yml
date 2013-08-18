@@ -1,9 +1,8 @@
 language: haskell
 before_install:
-  - wget -q -O - http://llvm.org/apt/llvm-snapshot.gpg.key | sudo apt-key add -
-  - sudo apt-add-repository -y 'deb http://llvm.org/apt/precise/ llvm-toolchain-precise main'
+  - sudo add-apt-repository ppa:h-rayflood/llvm
   - sudo apt-get update -qq
-  - sudo apt-get -f install libllvm3.3 libclang-common-3.3-dev libclang-3.3-dev
+  - sudo apt-get -f install llvm-3.3-dev
 
 notifications:
   email: false
