@@ -44,7 +44,7 @@ description](documentalist.cabal).
 ## Getting Started
 
 ```
-brew install llvm
+brew install --with-clang llvm
 cabal configure
 cabal build
 ```

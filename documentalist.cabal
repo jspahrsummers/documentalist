@@ -28,6 +28,7 @@ library
   extra-libraries:    clang
   extra-lib-dirs:     /usr/local/lib
   include-dirs:       /usr/local/include
+  cc-options:         -std=c99
   c-sources:          Text/Documentalist/SourceParser/Clang/FFI_wrappers.c
   other-modules:      Text.Documentalist.SourceParser.Clang.FFI
   build-tools:        hsc2hs
