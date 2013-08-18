@@ -6,7 +6,13 @@ static char *doc_fromCXString(CXString str) {
 	const char *original = clang_getCString(str);
 	if (original == NULL) return NULL;
 
-	char *copy = strdup(original);
+	size_t len = strlen(original);
+	char *copy = malloc(len + 1);
+	if (copy != NULL) {
+		strncpy(copy, original, len);
+		copy[len] = '\0';
+	}
+
 	clang_disposeString(str);
 	return copy;
 }
@@ -98,5 +104,7 @@ unsigned doc_visitChildren(const CXCursor *cursor, doc_CXCursorVisitor visitor) 
 }
 
 CXCursor *doc_dupCursor(const CXCursor *cursor) {
-	return doc_dupValue((CXCursor)*cursor);
+	CXCursor *copy = malloc(sizeof(*copy));
+	*copy = *cursor;
+	return copy;
 }
