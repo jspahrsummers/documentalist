@@ -1,4 +1,5 @@
 language: haskell
 before_install:
+  - sudo echo "deb http://llvm.org/apt/precise/ llvm-toolchain-precise main" > /etc/apt/sources.list.d/llvm.list
   - sudo apt-get update -qq
   - sudo apt-get install libclang-3.3-dev
