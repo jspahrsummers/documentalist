@@ -32,7 +32,6 @@ newtype CXCursorKind = CXCursorKind CInt
 
 #{enum CXTranslationUnitOption, CXTranslationUnitOption
     , noOptions = CXTranslationUnit_None
-    , skipFunctionBodies = CXTranslationUnit_SkipFunctionBodies
     }
 
 #{enum CXChildVisitResult, CXChildVisitResult

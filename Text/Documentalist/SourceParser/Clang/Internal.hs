@@ -68,7 +68,7 @@ newTranslationUnit file idx@(Index idxPtr) = do
     cxTU <- withCString file $ \cStr ->
         withForeignPtr idxPtr $ \cxIdx -> do
             arr@(argv, argc) <- toCStringArray ["-ObjC", "-nostdinc"]
-            cxTU <- FFI.parseTranslationUnit cxIdx cStr argv (fromInteger $ toInteger argc) nullPtr 0 FFI.skipFunctionBodies
+            cxTU <- FFI.parseTranslationUnit cxIdx cStr argv (fromInteger $ toInteger argc) nullPtr 0 FFI.noOptions
 
             freeCStringArray arr
             return cxTU
