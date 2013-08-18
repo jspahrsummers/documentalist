@@ -32,4 +32,4 @@ instance SourcePackage SourceFile where
 newSourceFile :: FilePath -> IO SourceFile
 newSourceFile path = do
     tu <- newIndex >>= newTranslationUnit path
-    return $ SourceFile { translationUnit = tu, filePath = path }
+    return SourceFile { translationUnit = tu, filePath = path }
