@@ -1,4 +1,5 @@
 module Text.Documentalist.SourceParser.Clang ( SourceFile
+                                             , newSourceFile
                                              ) where
 
 import Control.Applicative
@@ -23,10 +24,11 @@ instance SourcePackage SourceFile where
     parse src = do
         cursors <- getCursor (translationUnit src) >>= getAllChildren
         comments <- mapM getComment cursors
-        print $ catMaybes comments
+        let cmts = Prelude.map Comment $ catMaybes comments -- TODO: remove
 
         let mod = Module (filePath src) $ DeclMap Map.empty
-        return $ Package "" [mod]
+        
+        return (Package "" [mod], cmts)
 
 -- | Creates a Clang 'SourceFile' from a file on disk.
 newSourceFile :: FilePath -> IO SourceFile
