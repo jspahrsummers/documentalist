@@ -51,9 +51,6 @@ test-suite tests
                       test-framework,
                       test-framework-hunit,
                       HUnit
-  extra-libraries:    clang
-  extra-lib-dirs:     /usr/local/lib /usr/lib/llvm-3.4/lib
-  include-dirs:       /usr/local/include /usr/lib/llvm-3.4/include
                       
 
 source-repository head
