@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module Text.Documentalist.SourceParser.Clang ( SourceFile
                                              , newSourceFile
                                              ) where
@@ -10,6 +11,7 @@ import Foreign.ForeignPtr
 import System.IO
 import Text.Documentalist.SourceParser
 import Text.Documentalist.SourceParser.Clang.Internal
+import qualified Text.Documentalist.SourceParser.Clang.FFI as FFI
 
 -- | A file in a source language supported by Clang.
 data SourceFile = SourceFile
@@ -29,6 +31,17 @@ instance SourcePackage SourceFile where
         let mod = Module (filePath src) $ DeclMap Map.empty
         
         return (Package "" [mod], cmts)
+
+-- | Creates a 'Declaration' from the information at a cursor.
+declFromCursor :: Cursor -> IO (Maybe Declaration)
+declFromCursor c =
+    let declFromCursor' :: FFI.CXCursorKind -> IO (Maybe Declaration)
+        declFromCursor' typedefDecl = do
+            str <- fromJust <$> sourceStringAtCursor c
+            return $ Just $ TypeAlias (Identifier str) (Type "foobar")
+
+        declFromCursor' _ = return Nothing
+    in cursorKind c >>= declFromCursor'
 
 -- | Creates a Clang 'SourceFile' from a file on disk.
 newSourceFile :: FilePath -> IO SourceFile

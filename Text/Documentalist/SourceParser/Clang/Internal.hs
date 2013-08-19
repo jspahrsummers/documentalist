@@ -10,6 +10,7 @@ module Text.Documentalist.SourceParser.Clang.Internal ( Index
                                                       , sourceStringAtCursor
                                                       , tokensAtCursor
                                                       , isDeclaration
+                                                      , cursorKind
                                                       ) where
 
 import Control.Applicative
@@ -243,3 +244,7 @@ isDeclaration (Cursor _ cursorPtr) =
     withForeignPtr cursorPtr $ \cxCursor -> do
         b <- FFI.isDeclaration cxCursor
         return $ b /= 0
+
+-- | Returns the kind of the specified cursor.
+cursorKind :: Cursor -> IO FFI.CXCursorKind
+cursorKind (Cursor _ cursorPtr) = withForeignPtr cursorPtr FFI.getCursorKind
