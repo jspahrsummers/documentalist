@@ -19,7 +19,8 @@ main = do
 
 -- We don't want to expose these data types just yet
 testNum :: (t, [a]) -> Assertion
-testNum (_, comments) = length comments @?= 10
+testNum (_, comments) = length comments @?= 4
 
+-- TODO: work out right numbers
 racNum :: (t, [a]) -> Assertion
-racNum (_, comments) = length comments @?= 10
+racNum (_, comments) = length comments @?= 25
