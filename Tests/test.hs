@@ -13,8 +13,8 @@ main = do
     print p_rac
 
     defaultMainWithOpts
-      [ testCase "test_num" (testNum p_test),
-        testCase "rac_num" (racNum p_rac)
+      [ testCase "test_num" (testNum p_test)
+      , testCase "rac_num" (racNum p_rac)
       ] mempty
 
 -- We don't want to expose these data types just yet
