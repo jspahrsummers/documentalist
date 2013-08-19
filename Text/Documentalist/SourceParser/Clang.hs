@@ -28,7 +28,7 @@ instance SourcePackage SourceFile where
 
         let mod = Module (filePath src) $ DeclMap Map.empty
         
-        return $ (Package "" [mod], cmts)
+        return (Package "" [mod], cmts)
 
 -- | Creates a Clang 'SourceFile' from a file on disk.
 newSourceFile :: FilePath -> IO SourceFile
