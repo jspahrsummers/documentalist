@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module Text.Documentalist.SourceParser where
 
 import Control.Exception
@@ -5,11 +6,17 @@ import Data.Map.Strict
 
 -- | An identifier, as it would be written in the source language.
 newtype Identifier = Identifier String
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord)
+
+instance Show Identifier where
+    show (Identifier str) = "`" ++ str ++ "`"
 
 -- | A type, as it would be declared in the source language.
 newtype Type = Type String
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord)
+
+instance Show Type where
+    show (Type str) = "`" ++ str ++ "`"
 
 -- | Represents a list of types (or just a single type) that another type derives from.
 type SuperTypes = [Type]
@@ -41,12 +48,21 @@ data Declaration = Class Identifier SuperTypes [Declaration]            -- ^ A c
 --
 --   This string should be preprocessed to remove markers, like -- in Haskell or // in C.
 newtype Comment = Comment String
-    deriving (Eq, Show)
+    deriving (Eq)
+
+instance Show Comment where
+    show (Comment str) = str
 
 -- | Maps declarations to optional values of type @t@, which should represent some kind
 --   of comment or documentation data.
 newtype DeclMap t = DeclMap (Map Declaration (Maybe t))
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord)
+
+instance (Show t) => Show (DeclMap t) where
+    show (DeclMap dm) =
+        let show' :: Declaration -> Maybe t -> String -> String
+            show' decl mt str = str ++ "\n\t" ++ show decl ++ ": " ++ show mt
+        in foldrWithKey show' "{" dm ++ "\n}"
 
 -- | A single module in the source language.
 data Module t = Module String (DeclMap t)
@@ -61,4 +77,4 @@ class SourcePackage p where
     -- | Parses the package into a language-independent form.
     --
     --   Errors may be indicated with `IOException`s.
-    parse :: p -> IO (Package Comment, [Comment])
+    parse :: p -> IO (Package Comment)
