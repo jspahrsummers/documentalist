@@ -23,14 +23,13 @@ instance Show SourceFile where
     show = show . filePath
 
 instance SourcePackage SourceFile where
-    parse src = do
+    parse src =
         let declCursors = filter isDeclaration $ children True $ getCursor $ translationUnit src
             decls = mapMaybe declFromCursor declCursors
             cmts = map (fmap Comment . getComment) declCursors
             declMap = DeclMap $ Map.fromList $ zip decls cmts
             mod = Module (filePath src) declMap
-        
-        return $ Package "" [mod]
+        in return $ Package "" [mod]
 
 -- | Creates a 'Declaration' from the information at a cursor.
 declFromCursor :: Cursor -> Maybe Declaration

@@ -115,8 +115,7 @@ getComment cursor@(Cursor _ ptr) =
 -- | Gets the name for a cursor.
 getCursorSpelling :: Cursor -> String
 getCursorSpelling (Cursor _ ptr) =
-    unsafePerformIO $ withForeignPtr ptr $ \cxCursor ->
-        FFI.getCursorSpelling cxCursor >>= wrapCString
+    unsafePerformIO $ withForeignPtr ptr $ FFI.getCursorSpelling >=> wrapCString
 
 -- | Returns cursors for the children of a given cursor.
 children
