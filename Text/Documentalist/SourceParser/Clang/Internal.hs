@@ -26,6 +26,7 @@ import Foreign.Marshal.Array
 import Foreign.Ptr
 import Foreign.Storable
 import System.IO
+import System.IO.Unsafe
 import Text.Documentalist.SourceParser.Clang.Types
 import qualified Text.Documentalist.SourceParser.Clang.FFI as FFI
 
@@ -89,16 +90,17 @@ wrapCString cStr = do
     return str
 
 -- | Creates a cursor that begins at the level of a translation unit.
-getCursor :: TranslationUnit -> IO Cursor
-getCursor tu@(TranslationUnit _ tuPtr) = do
-    cxCursor <- withForeignPtr tuPtr $ \cxTU ->
-        FFI.getTranslationUnitCursor cxTU
+getCursor :: TranslationUnit -> Cursor
+getCursor tu@(TranslationUnit _ tuPtr) =
+    unsafePerformIO $ do
+        cxCursor <- withForeignPtr tuPtr $ \cxTU ->
+            FFI.getTranslationUnitCursor cxTU
 
-    ptr <- newForeignPtr FFI.p_free cxCursor
-    return $ Cursor tu ptr
+        ptr <- newForeignPtr FFI.p_free cxCursor
+        return $ Cursor tu ptr
 
 -- | Gets the comment associated with the declaration at a cursor, if any.
-getComment :: Cursor -> IO (Maybe String)
+getComment :: Cursor -> Maybe String
 getComment cursor@(Cursor _ ptr) =
     let rawComment :: FFI.CXCursor -> IO (Maybe String)
         rawComment cxCursor = do
@@ -106,40 +108,39 @@ getComment cursor@(Cursor _ ptr) =
             if cStr == nullPtr
                 then return Nothing
                 else Just <$> wrapCString cStr
-    in do
-        isDecl <- isDeclaration cursor
-        if isDecl
-            then withForeignPtr ptr $ \cxCursor -> rawComment cxCursor
-            else return Nothing
+    in if isDeclaration cursor
+        then unsafePerformIO $ withForeignPtr ptr $ \cxCursor -> rawComment cxCursor
+        else Nothing
 
 -- | Gets the name for a cursor.
-getCursorSpelling :: Cursor -> IO String
+getCursorSpelling :: Cursor -> String
 getCursorSpelling (Cursor _ ptr) =
-    withForeignPtr ptr $ \cxCursor ->
+    unsafePerformIO $ withForeignPtr ptr $ \cxCursor ->
         FFI.getCursorSpelling cxCursor >>= wrapCString
 
--- | Creates cursors for the children of a given cursor.
+-- | Returns cursors for the children of a given cursor.
 children
     :: Bool         -- ^ Whether to enumerate deeply and return all descendants as well.
     -> Cursor       -- ^ The cursor to enumerate the children of.
-    -> IO [Cursor]
+    -> [Cursor]
 
-children deep (Cursor tu ptr) = do
-    cursors <- newIORef []
+children deep (Cursor tu ptr) =
+    unsafePerformIO $ do
+        cursors <- newIORef []
 
-    let visitor :: FFI.CXVisitor
-        visitor cxCursor _ = do
-            cxCursor' <- FFI.dupCursor cxCursor
-            cursor <- Cursor tu <$> newForeignPtr FFI.p_free cxCursor'
+        let visitor :: FFI.CXVisitor
+            visitor cxCursor _ = do
+                cxCursor' <- FFI.dupCursor cxCursor
+                cursor <- Cursor tu <$> newForeignPtr FFI.p_free cxCursor'
 
-            modifyIORef cursors $ \xs -> xs ++ [cursor]
-            return $ if deep then FFI.recurse else FFI.continue
+                modifyIORef cursors $ \xs -> xs ++ [cursor]
+                return $ if deep then FFI.recurse else FFI.continue
 
-    dynVisitor <- FFI.mkVisitor visitor
-    withForeignPtr ptr $ \cxCursor ->
-        FFI.visitChildren cxCursor dynVisitor
+        dynVisitor <- FFI.mkVisitor visitor
+        withForeignPtr ptr $ \cxCursor ->
+            FFI.visitChildren cxCursor dynVisitor
 
-    readIORef cursors
+        readIORef cursors
 
 -- | Reads between two source locations in a file.
 readFileInRange
@@ -225,42 +226,42 @@ sourceStringAtCursor (Cursor _ cursorPtr) =
         return str
 
 -- | Creates tokens for the source code associated with a cursor, if any.
-tokensAtCursor :: Cursor -> IO [Token]
-tokensAtCursor (Cursor (TranslationUnit _ tuPtr) cursorPtr) = do
-    range <- withForeignPtr cursorPtr $ \cxCursor ->
-        FFI.getCursorExtent cxCursor
+tokensAtCursor :: Cursor -> [Token]
+tokensAtCursor (Cursor (TranslationUnit _ tuPtr) cursorPtr) =
+    unsafePerformIO $ do
+        range <- withForeignPtr cursorPtr $ \cxCursor ->
+            FFI.getCursorExtent cxCursor
 
-    strs <- withForeignPtr tuPtr $ \cxTU -> do
-        countPtr <- malloc
-        tokenSet <- FFI.tokenize cxTU range countPtr
+        strs <- withForeignPtr tuPtr $ \cxTU -> do
+            countPtr <- malloc
+            tokenSet <- FFI.tokenize cxTU range countPtr
 
-        count <- peek countPtr
-        free countPtr
+            count <- peek countPtr
+            free countPtr
 
-        spellings <- FFI.getTokenSpellings cxTU tokenSet count
-        FFI.disposeTokens cxTU tokenSet count
+            spellings <- FFI.getTokenSpellings cxTU tokenSet count
+            FFI.disposeTokens cxTU tokenSet count
 
-        cStrs <- peekArray (fromInteger $ toInteger count) spellings
-        FFI.disposeTokenSpellings spellings count
+            cStrs <- peekArray (fromInteger $ toInteger count) spellings
+            FFI.disposeTokenSpellings spellings count
 
-        mapM wrapCString cStrs
+            mapM wrapCString cStrs
 
-    FFI.free range
-    return $ map Token strs
+        FFI.free range
+        return $ map Token strs
 
 -- | Returns whether a cursor refers to a declaration.
-isDeclaration :: Cursor -> IO Bool
+isDeclaration :: Cursor -> Bool
 isDeclaration (Cursor _ cursorPtr) =
-    withForeignPtr cursorPtr $ \cxCursor -> do
+    unsafePerformIO $ withForeignPtr cursorPtr $ \cxCursor -> 
         return $ FFI.isDeclaration cxCursor /= 0
 
 -- | Returns the kind of the specified cursor.
-cursorKind :: Cursor -> IO CursorKind
-cursorKind (Cursor _ cursorPtr) = withForeignPtr cursorPtr $ return . FFI.getCursorKind
+cursorKind :: Cursor -> CursorKind
+cursorKind (Cursor _ cursorPtr) =
+    unsafePerformIO $ withForeignPtr cursorPtr $ return . FFI.getCursorKind
 
 -- | Returns the immediate children of the given cursor that are of the given kind.
-childrenOfKind :: Cursor -> CursorKind -> IO [Cursor]
+childrenOfKind :: Cursor -> CursorKind -> [Cursor]
 childrenOfKind cursor kind =
-    let eqKind :: Cursor -> IO Bool
-        eqKind c = (== kind) <$> cursorKind c
-    in children False cursor >>= filterM eqKind
+    filter ((==) kind . cursorKind) $ children False cursor

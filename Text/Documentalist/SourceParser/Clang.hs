@@ -24,43 +24,35 @@ instance Show SourceFile where
 
 instance SourcePackage SourceFile where
     parse src = do
-        cursors <- getCursor (translationUnit src) >>= children True
-        declCursors <- filterM isDeclaration cursors
-
-        cmtStrs <- mapM getComment cursors
-        decls <- catMaybes <$> mapM declFromCursor cursors
-
-        let cmts = map (fmap Comment) cmtStrs
+        let declCursors = filter isDeclaration $ children True $ getCursor $ translationUnit src
+            decls = mapMaybe declFromCursor declCursors
+            cmts = map (fmap Comment . getComment) declCursors
             declMap = DeclMap $ Map.fromList $ zip decls cmts
             mod = Module (filePath src) declMap
         
         return $ Package "" [mod]
 
 -- | Creates a 'Declaration' from the information at a cursor.
-declFromCursor :: Cursor -> IO (Maybe Declaration)
+declFromCursor :: Cursor -> Maybe Declaration
 declFromCursor c =
-    let declFromCursor' :: CursorKind -> IO (Maybe Declaration)
+    let declFromCursor' :: CursorKind -> Maybe Declaration
         declFromCursor' k
-            | k == typedefDecl = do
-                str <- getCursorSpelling c
-                return $ Just $ TypeAlias (Identifier str) (Type "foobar")
+            | k == typedefDecl =
+                Just $ TypeAlias (Identifier $ getCursorSpelling c) (Type "foobar")
 
-            | k == objcInterfaceDecl = do
-                str <- getCursorSpelling c
-                super <- childrenOfKind c objcSuperclassRef >>= mapM getCursorSpelling
-                children <- children True c >>= mapM declFromCursor
-                return $ Just $ Class (Identifier str) (map Type super) (catMaybes children)
+            | k == objcInterfaceDecl =
+                let super = map getCursorSpelling $ childrenOfKind c objcSuperclassRef
+                    decls = map declFromCursor $ children True c
+                in Just $ Class (Identifier $ getCursorSpelling c) (map Type super) (catMaybes decls)
 
-            | k == objcPropertyDecl = do
-                str <- getCursorSpelling c
-                return $ Just $ Property (Identifier str) Nothing
+            | k == objcPropertyDecl =
+                Just $ Property (Identifier $ getCursorSpelling c) Nothing
 
-            | k == objcInstanceMethodDecl = do
-                str <- getCursorSpelling c
-                return $ Just $ InstanceMethod (Identifier str) [] []
+            | k == objcInstanceMethodDecl =
+                Just $ InstanceMethod (Identifier $ getCursorSpelling c) [] []
 
-            | otherwise = return Nothing
-    in cursorKind c >>= declFromCursor'
+            | otherwise = Nothing
+    in declFromCursor' $ cursorKind c
 
 -- | Creates a Clang 'SourceFile' from a file on disk.
 newSourceFile :: FilePath -> IO SourceFile
