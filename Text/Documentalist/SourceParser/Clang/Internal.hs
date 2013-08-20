@@ -216,10 +216,7 @@ sourceStringAtCursor (Cursor _ cursorPtr) =
         end <- FFI.getRangeEnd ex
         FFI.free ex
 
-        startIsNull <- FFI.isNullRange start
-        endIsNull <- FFI.isNullRange end
-
-        str <- if startIsNull == 0 && endIsNull == 0
+        str <- if FFI.isNullRange start == 0 && FFI.isNullRange end == 0
                 then sourceStringBetweenRanges start end
                 else return Nothing
 
@@ -255,12 +252,11 @@ tokensAtCursor (Cursor (TranslationUnit _ tuPtr) cursorPtr) = do
 isDeclaration :: Cursor -> IO Bool
 isDeclaration (Cursor _ cursorPtr) =
     withForeignPtr cursorPtr $ \cxCursor -> do
-        b <- FFI.isDeclaration cxCursor
-        return $ b /= 0
+        return $ FFI.isDeclaration cxCursor /= 0
 
 -- | Returns the kind of the specified cursor.
 cursorKind :: Cursor -> IO CursorKind
-cursorKind (Cursor _ cursorPtr) = withForeignPtr cursorPtr FFI.getCursorKind
+cursorKind (Cursor _ cursorPtr) = withForeignPtr cursorPtr $ return . FFI.getCursorKind
 
 -- | Returns the immediate children of the given cursor that are of the given kind.
 childrenOfKind :: Cursor -> CursorKind -> IO [Cursor]
