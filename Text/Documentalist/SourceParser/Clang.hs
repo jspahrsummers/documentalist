@@ -36,11 +36,11 @@ instance SourcePackage SourceFile where
 declFromCursor :: Cursor -> IO (Maybe Declaration)
 declFromCursor c =
     let declFromCursor' :: CursorKind -> IO (Maybe Declaration)
-        declFromCursor' typedefDecl = do
-            str <- fromJust <$> sourceStringAtCursor c
-            return $ Just $ TypeAlias (Identifier str) (Type "foobar")
-
-        declFromCursor' _ = return Nothing
+        declFromCursor' k
+            | k == typedefDecl = do
+                str <- fromJust <$> sourceStringAtCursor c
+                return $ Just $ TypeAlias (Identifier str) (Type "foobar")
+            | otherwise = return Nothing
     in cursorKind c >>= declFromCursor'
 
 -- | Creates a Clang 'SourceFile' from a file on disk.
