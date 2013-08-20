@@ -44,9 +44,15 @@ declFromCursor c =
             | k == typedefDecl = do
                 str <- getCursorSpelling c
                 return $ Just $ TypeAlias (Identifier str) (Type "foobar")
+
             | k == objcInterfaceDecl = do
                 str <- getCursorSpelling c
                 return $ Just $ Class (Identifier str) [] []
+
+            | k == objcPropertyDecl = do
+                str <- getCursorSpelling c
+                return $ Just $ Property (Identifier str) Nothing
+
             | otherwise = return Nothing
     in cursorKind c >>= declFromCursor'
 

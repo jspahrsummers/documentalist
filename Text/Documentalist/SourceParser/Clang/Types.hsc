@@ -23,6 +23,7 @@ newtype CursorKind = CursorKind CInt
     , objcInterfaceDecl = CXCursor_ObjCInterfaceDecl
     , objcCategoryDecl = CXCursor_ObjCCategoryDecl
     , objcProtocolDecl = CXCursor_ObjCProtocolDecl
+    , objcPropertyDecl = CXCursor_ObjCPropertyDecl
     , objcIvarDecl = CXCursor_ObjCIvarDecl
     , objcInstanceMethodDecl = CXCursor_ObjCInstanceMethodDecl
     , objcClassMethodDecl = CXCursor_ObjCClassMethodDecl
