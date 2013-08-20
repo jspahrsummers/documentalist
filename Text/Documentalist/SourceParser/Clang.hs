@@ -53,6 +53,10 @@ declFromCursor c =
                 str <- getCursorSpelling c
                 return $ Just $ Property (Identifier str) Nothing
 
+            | k == objcInstanceMethodDecl = do
+                str <- getCursorSpelling c
+                return $ Just $ InstanceMethod (Identifier str) [] []
+
             | otherwise = return Nothing
     in cursorKind c >>= declFromCursor'
 
