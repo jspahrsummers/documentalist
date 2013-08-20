@@ -5,7 +5,7 @@ module Text.Documentalist.SourceParser.Clang ( SourceFile
 
 import Control.Applicative
 import Control.Monad
-import Data.Map.Strict as Map
+import qualified Data.Map.Strict as Map
 import Data.Maybe
 import Foreign.ForeignPtr
 import System.IO
@@ -25,12 +25,16 @@ instance Show SourceFile where
 instance SourcePackage SourceFile where
     parse src = do
         cursors <- getCursor (translationUnit src) >>= getAllChildren
-        comments <- mapM getComment cursors
-        let cmts = Prelude.map Comment $ catMaybes comments -- TODO: remove
+        declCursors <- filterM isDeclaration cursors
 
-        let mod = Module (filePath src) $ DeclMap Map.empty
+        cmtStrs <- mapM getComment cursors
+        decls <- catMaybes <$> mapM declFromCursor cursors
+
+        let cmts = map (fmap Comment) cmtStrs -- TODO: remove
+            declMap = DeclMap $ Map.fromList $ zip decls cmts
+            mod = Module (filePath src) declMap
         
-        return (Package "" [mod], cmts)
+        return (Package "" [mod], catMaybes cmts)
 
 -- | Creates a 'Declaration' from the information at a cursor.
 declFromCursor :: Cursor -> IO (Maybe Declaration)
