@@ -30,11 +30,11 @@ instance SourcePackage SourceFile where
         cmtStrs <- mapM getComment cursors
         decls <- catMaybes <$> mapM declFromCursor cursors
 
-        let cmts = map (fmap Comment) cmtStrs -- TODO: remove
+        let cmts = map (fmap Comment) cmtStrs
             declMap = DeclMap $ Map.fromList $ zip decls cmts
             mod = Module (filePath src) declMap
         
-        return (Package "" [mod], catMaybes cmts)
+        return $ Package "" [mod]
 
 -- | Creates a 'Declaration' from the information at a cursor.
 declFromCursor :: Cursor -> IO (Maybe Declaration)

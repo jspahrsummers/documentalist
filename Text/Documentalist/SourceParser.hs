@@ -61,4 +61,4 @@ class SourcePackage p where
     -- | Parses the package into a language-independent form.
     --
     --   Errors may be indicated with `IOException`s.
-    parse :: p -> IO (Package Comment, [Comment])
+    parse :: p -> IO (Package Comment)
