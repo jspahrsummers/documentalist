@@ -11,6 +11,7 @@ module Text.Documentalist.SourceParser.Clang.Internal ( Index
                                                       , tokensAtCursor
                                                       , isDeclaration
                                                       , cursorKind
+                                                      , getCursorSpelling
                                                       ) where
 
 import Control.Applicative
@@ -109,6 +110,12 @@ getComment cursor@(Cursor _ ptr) =
         if isDecl
             then withForeignPtr ptr $ \cxCursor -> rawComment cxCursor
             else return Nothing
+
+-- | Gets the name for a cursor.
+getCursorSpelling :: Cursor -> IO String
+getCursorSpelling (Cursor _ ptr) =
+    withForeignPtr ptr $ \cxCursor ->
+        FFI.getCursorSpelling cxCursor >>= wrapCString
 
 -- | Recursively creates cursors for all children of a given cursor.
 getAllChildren :: Cursor -> IO [Cursor]

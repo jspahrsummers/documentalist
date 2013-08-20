@@ -16,6 +16,7 @@ unsigned doc_isDeclaration(const CXCursor *cursor);
 CXSourceRange *doc_getCursorExtent(const CXCursor *cursor);
 enum CXCursorKind doc_getCursorKind(const CXCursor *cursor);
 CXCursor *doc_dupCursor(const CXCursor *cursor);
+char *doc_getCursorSpelling(const CXCursor *cursor);
 
 typedef enum CXChildVisitResult (*doc_CXCursorVisitor)(const CXCursor *cursor, const CXCursor *parent);
 unsigned doc_visitChildren(const CXCursor *cursor, doc_CXCursorVisitor visitor);

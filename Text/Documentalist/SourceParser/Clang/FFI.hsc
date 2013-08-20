@@ -108,3 +108,6 @@ foreign import ccall "wrapper"
 
 foreign import ccall unsafe "FFI_wrappers.h doc_getCursorKind"
     getCursorKind :: CXCursor -> IO CursorKind
+
+foreign import ccall unsafe "FFI_wrappers.h doc_getCursorSpelling"
+    getCursorSpelling :: CXCursor -> IO CString
