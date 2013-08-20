@@ -25,6 +25,7 @@ import Foreign.Ptr
 import Foreign.Storable
 import System.IO
 import qualified Text.Documentalist.SourceParser.Clang.FFI as FFI
+import qualified Text.Documentalist.SourceParser.Clang.Types as FFI
 
 -- | Represents a collection of translation units.
 newtype Index = Index (ForeignPtr ())

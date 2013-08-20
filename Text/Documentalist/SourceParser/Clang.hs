@@ -11,7 +11,7 @@ import Foreign.ForeignPtr
 import System.IO
 import Text.Documentalist.SourceParser
 import Text.Documentalist.SourceParser.Clang.Internal
-import qualified Text.Documentalist.SourceParser.Clang.FFI as FFI
+import Text.Documentalist.SourceParser.Clang.Types
 
 -- | A file in a source language supported by Clang.
 data SourceFile = SourceFile
@@ -35,7 +35,7 @@ instance SourcePackage SourceFile where
 -- | Creates a 'Declaration' from the information at a cursor.
 declFromCursor :: Cursor -> IO (Maybe Declaration)
 declFromCursor c =
-    let declFromCursor' :: FFI.CXCursorKind -> IO (Maybe Declaration)
+    let declFromCursor' :: CXCursorKind -> IO (Maybe Declaration)
         declFromCursor' typedefDecl = do
             str <- fromJust <$> sourceStringAtCursor c
             return $ Just $ TypeAlias (Identifier str) (Type "foobar")
