@@ -24,7 +24,7 @@ instance Show SourceFile where
 
 instance SourcePackage SourceFile where
     parse src = do
-        cursors <- getCursor (translationUnit src) >>= getAllChildren
+        cursors <- getCursor (translationUnit src) >>= children True
         declCursors <- filterM isDeclaration cursors
 
         cmtStrs <- mapM getComment cursors
@@ -47,7 +47,9 @@ declFromCursor c =
 
             | k == objcInterfaceDecl = do
                 str <- getCursorSpelling c
-                return $ Just $ Class (Identifier str) [] []
+                super <- childrenOfKind c objcSuperclassRef >>= mapM getCursorSpelling
+                children <- children True c >>= mapM declFromCursor
+                return $ Just $ Class (Identifier str) (map Type super) (catMaybes children)
 
             | k == objcPropertyDecl = do
                 str <- getCursorSpelling c
