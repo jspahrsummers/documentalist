@@ -59,7 +59,7 @@ foreign import ccall unsafe "FFI_wrappers.h doc_getTranslationUnitCursor"
     getTranslationUnitCursor :: CXTranslationUnit -> IO CXCursor
 
 foreign import ccall unsafe "FFI_wrappers.h doc_isDeclaration"
-    isDeclaration :: CXCursor -> IO CUInt
+    isDeclaration :: CXCursor -> CUInt
 
 foreign import ccall unsafe "FFI_wrappers.h doc_getCursorExtent"
     getCursorExtent :: CXCursor -> IO CXSourceRange
@@ -89,7 +89,7 @@ foreign import ccall unsafe "FFI_wrappers.h doc_getFileName"
     getFileName :: CXFile -> IO CString
 
 foreign import ccall unsafe "FFI_wrappers.h doc_Range_isNull"
-    isNullRange :: CXSourceRange -> IO CInt
+    isNullRange :: CXSourceRange -> CInt
 
 foreign import ccall unsafe "free"
     free :: Ptr () -> IO ()
@@ -107,7 +107,7 @@ foreign import ccall "wrapper"
     mkVisitor :: CXVisitor -> IO (FunPtr CXVisitor)
 
 foreign import ccall unsafe "FFI_wrappers.h doc_getCursorKind"
-    getCursorKind :: CXCursor -> IO CursorKind
+    getCursorKind :: CXCursor -> CursorKind
 
 foreign import ccall unsafe "FFI_wrappers.h doc_getCursorSpelling"
     getCursorSpelling :: CXCursor -> IO CString
