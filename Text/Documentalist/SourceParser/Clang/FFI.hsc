@@ -107,4 +107,4 @@ foreign import ccall "wrapper"
     mkVisitor :: CXVisitor -> IO (FunPtr CXVisitor)
 
 foreign import ccall unsafe "FFI_wrappers.h doc_getCursorKind"
-    getCursorKind :: CXCursor -> IO CXCursorKind
+    getCursorKind :: CXCursor -> IO CursorKind

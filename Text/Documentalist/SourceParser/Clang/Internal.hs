@@ -24,8 +24,8 @@ import Foreign.Marshal.Array
 import Foreign.Ptr
 import Foreign.Storable
 import System.IO
+import Text.Documentalist.SourceParser.Clang.Types
 import qualified Text.Documentalist.SourceParser.Clang.FFI as FFI
-import qualified Text.Documentalist.SourceParser.Clang.Types as FFI
 
 -- | Represents a collection of translation units.
 newtype Index = Index (ForeignPtr ())
@@ -247,5 +247,5 @@ isDeclaration (Cursor _ cursorPtr) =
         return $ b /= 0
 
 -- | Returns the kind of the specified cursor.
-cursorKind :: Cursor -> IO FFI.CXCursorKind
+cursorKind :: Cursor -> IO CursorKind
 cursorKind (Cursor _ cursorPtr) = withForeignPtr cursorPtr FFI.getCursorKind

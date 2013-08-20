@@ -8,10 +8,10 @@ import Foreign.Ptr
 
 #include <clang-c/Index.h>
 
-newtype CXCursorKind = CXCursorKind CInt
+newtype CursorKind = CursorKind CInt
     deriving (Eq, Show)
 
-#{enum CXCursorKind, CXCursorKind
+#{enum CursorKind, CursorKind
     , structDecl = CXCursor_StructDecl
     , unionDecl = CXCursor_UnionDecl
     , enumDecl = CXCursor_EnumDecl

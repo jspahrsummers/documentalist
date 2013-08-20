@@ -35,7 +35,7 @@ instance SourcePackage SourceFile where
 -- | Creates a 'Declaration' from the information at a cursor.
 declFromCursor :: Cursor -> IO (Maybe Declaration)
 declFromCursor c =
-    let declFromCursor' :: CXCursorKind -> IO (Maybe Declaration)
+    let declFromCursor' :: CursorKind -> IO (Maybe Declaration)
         declFromCursor' typedefDecl = do
             str <- fromJust <$> sourceStringAtCursor c
             return $ Just $ TypeAlias (Identifier str) (Type "foobar")
