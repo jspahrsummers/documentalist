@@ -6,10 +6,13 @@ module Text.Documentalist.SourceParser.Clang.Internal ( Index
                                                       , Cursor(..)
                                                       , getCursor
                                                       , getComment
-                                                      , getAllChildren
+                                                      , children
                                                       , sourceStringAtCursor
                                                       , tokensAtCursor
                                                       , isDeclaration
+                                                      , cursorKind
+                                                      , getCursorSpelling
+                                                      , childrenOfKind
                                                       ) where
 
 import Control.Applicative
@@ -23,6 +26,7 @@ import Foreign.Marshal.Array
 import Foreign.Ptr
 import Foreign.Storable
 import System.IO
+import Text.Documentalist.SourceParser.Clang.Types
 import qualified Text.Documentalist.SourceParser.Clang.FFI as FFI
 
 -- | Represents a collection of translation units.
@@ -108,9 +112,19 @@ getComment cursor@(Cursor _ ptr) =
             then withForeignPtr ptr $ \cxCursor -> rawComment cxCursor
             else return Nothing
 
--- | Recursively creates cursors for all children of a given cursor.
-getAllChildren :: Cursor -> IO [Cursor]
-getAllChildren (Cursor tu ptr) = do
+-- | Gets the name for a cursor.
+getCursorSpelling :: Cursor -> IO String
+getCursorSpelling (Cursor _ ptr) =
+    withForeignPtr ptr $ \cxCursor ->
+        FFI.getCursorSpelling cxCursor >>= wrapCString
+
+-- | Creates cursors for the children of a given cursor.
+children
+    :: Bool         -- ^ Whether to enumerate deeply and return all descendants as well.
+    -> Cursor       -- ^ The cursor to enumerate the children of.
+    -> IO [Cursor]
+
+children deep (Cursor tu ptr) = do
     cursors <- newIORef []
 
     let visitor :: FFI.CXVisitor
@@ -119,7 +133,7 @@ getAllChildren (Cursor tu ptr) = do
             cursor <- Cursor tu <$> newForeignPtr FFI.p_free cxCursor'
 
             modifyIORef cursors $ \xs -> xs ++ [cursor]
-            return FFI.recurse
+            return $ if deep then FFI.recurse else FFI.continue
 
     dynVisitor <- FFI.mkVisitor visitor
     withForeignPtr ptr $ \cxCursor ->
@@ -243,3 +257,14 @@ isDeclaration (Cursor _ cursorPtr) =
     withForeignPtr cursorPtr $ \cxCursor -> do
         b <- FFI.isDeclaration cxCursor
         return $ b /= 0
+
+-- | Returns the kind of the specified cursor.
+cursorKind :: Cursor -> IO CursorKind
+cursorKind (Cursor _ cursorPtr) = withForeignPtr cursorPtr FFI.getCursorKind
+
+-- | Returns the immediate children of the given cursor that are of the given kind.
+childrenOfKind :: Cursor -> CursorKind -> IO [Cursor]
+childrenOfKind cursor kind =
+    let eqKind :: Cursor -> IO Bool
+        eqKind c = (== kind) <$> cursorKind c
+    in children False cursor >>= filterM eqKind

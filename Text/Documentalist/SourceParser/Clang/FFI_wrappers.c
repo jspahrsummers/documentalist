@@ -108,3 +108,7 @@ CXCursor *doc_dupCursor(const CXCursor *cursor) {
 	*copy = *cursor;
 	return copy;
 }
+
+char *doc_getCursorSpelling(const CXCursor *cursor) {
+	return doc_fromCXString(clang_getCursorSpelling(*cursor));
+}

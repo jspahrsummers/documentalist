@@ -3,6 +3,7 @@ import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit
 import Text.Documentalist
+import Text.Documentalist.SourceParser
 
 main :: IO ()
 main = do
@@ -17,10 +18,9 @@ main = do
       , testCase "rac_num" (racNum p_rac)
       ] mempty
 
--- We don't want to expose these data types just yet
-testNum :: (t, [a]) -> Assertion
-testNum (_, comments) = length comments @?= 4
+testNum :: Package Comment -> Assertion
+testNum (Package p modules) = length modules @?= 1
 
 -- TODO: work out right numbers
-racNum :: (t, [a]) -> Assertion
-racNum (_, comments) = length comments @?= 25
+racNum :: Package Comment -> Assertion
+racNum (Package p modules) = length modules @?= 1

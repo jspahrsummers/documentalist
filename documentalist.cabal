@@ -26,6 +26,7 @@ library
                       mtl >= 2.1,
                       transformers >= 0.3
   other-modules:      Text.Documentalist.SourceParser.Clang.FFI
+                      Text.Documentalist.SourceParser.Clang.Types
                       Text.Documentalist.SourceParser.Clang.Internal
   extra-libraries:    clang
   extra-lib-dirs:     /usr/local/lib /usr/lib/llvm-3.4/lib
