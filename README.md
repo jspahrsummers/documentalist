@@ -48,3 +48,13 @@ brew install --with-clang llvm
 cabal configure
 cabal build
 ```
+
+## Running Tests
+
+```
+brew install --with-clang llvm
+cabal install --only-dependencies --enable-tests
+cabal configure --enable-tests
+cabal build
+cabal test
+```
