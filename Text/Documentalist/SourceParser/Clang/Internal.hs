@@ -13,6 +13,7 @@ module Text.Documentalist.SourceParser.Clang.Internal ( Index
                                                       , cursorKind
                                                       , getCursorSpelling
                                                       , childrenOfKind
+                                                      , visitDescendants
                                                       ) where
 
 import Control.Applicative
@@ -117,13 +118,15 @@ getCursorSpelling :: Cursor -> String
 getCursorSpelling (Cursor _ ptr) =
     unsafePerformIO $ withForeignPtr ptr $ FFI.getCursorSpelling >=> wrapCString
 
--- | Returns cursors for the children of a given cursor.
-children
-    :: Bool         -- ^ Whether to enumerate deeply and return all descendants as well.
-    -> Cursor       -- ^ The cursor to enumerate the children of.
-    -> [Cursor]
+-- | Visits the descendants of a cursor.
+visitDescendants
+    :: Cursor                                   -- ^ The cursor to visit the descendants of.
+    -> (Cursor -> (Bool, CursorVisitResult))    -- ^ A function to run over each descendant, starting with immediate children.
+                                                --   The 'Bool' is whether to include this cursor in the result.
+                                                --   The 'CursorVisitResult' determines how enumeration should continue.
+    -> [Cursor]                                 -- ^ A list of cursors for which 'True' was returned.
 
-children deep (Cursor tu ptr) =
+visitDescendants (Cursor tu ptr) f =
     unsafePerformIO $ do
         cursors <- newIORef []
 
@@ -132,14 +135,24 @@ children deep (Cursor tu ptr) =
                 cxCursor' <- FFI.dupCursor cxCursor
                 cursor <- Cursor tu <$> newForeignPtr FFI.p_free cxCursor'
 
-                modifyIORef cursors $ \xs -> xs ++ [cursor]
-                return $ if deep then recurse else continue
+                let (b, v) = f cursor
+                when b $ modifyIORef cursors (++ [cursor])
+                return v
 
         dynVisitor <- FFI.mkVisitor visitor
         withForeignPtr ptr $ \cxCursor ->
             FFI.visitChildren cxCursor dynVisitor
 
         readIORef cursors
+
+-- | Returns cursors for the children of a given cursor.
+children
+    :: Bool         -- ^ Whether to enumerate deeply and return all descendants as well.
+    -> Cursor       -- ^ The cursor to enumerate the children of.
+    -> [Cursor]
+
+children deep cursor =
+    visitDescendants cursor $ \desc -> (True, if deep then recurse else continue)
 
 -- | Reads between two source locations in a file.
 readFileInRange
