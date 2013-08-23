@@ -73,8 +73,8 @@ foreign import ccall unsafe "FFI_wrappers.h doc_getRangeStart"
 foreign import ccall unsafe "FFI_wrappers.h doc_getRangeEnd"
     getRangeEnd :: CXSourceRange -> IO CXSourceLocation
 
-foreign import ccall unsafe "FFI_wrappers.h doc_getFileLocation"
-    getFileLocation :: CXSourceLocation -> Ptr CUInt -> Ptr CUInt -> Ptr CUInt -> IO CXFile
+foreign import ccall unsafe "FFI_wrappers.h doc_getExpansionLocation"
+    getExpansionLocation :: CXSourceLocation -> Ptr CUInt -> Ptr CUInt -> Ptr CUInt -> IO CXFile
 
 foreign import ccall unsafe "FFI_wrappers.h doc_getFileName"
     getFileName :: CXFile -> IO CString

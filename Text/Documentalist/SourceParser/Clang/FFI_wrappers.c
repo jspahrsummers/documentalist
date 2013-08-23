@@ -71,9 +71,9 @@ CXSourceLocation *doc_getRangeEnd(const CXSourceRange *range) {
 	return doc_dupValue(clang_getRangeEnd(*range));
 }
 
-CXFile *doc_getFileLocation(const CXSourceLocation *location, unsigned *line, unsigned *column, unsigned *offset) {
+CXFile *doc_getExpansionLocation(const CXSourceLocation *location, unsigned *line, unsigned *column, unsigned *offset) {
 	CXFile file;
-	clang_getFileLocation(*location, &file, line, column, offset);
+	clang_getExpansionLocation(*location, &file, line, column, offset);
 	return doc_dupValue(file);
 }
 
