@@ -184,7 +184,7 @@ sourceStringAtCursor (Cursor _ cursorPtr) =
         sourceStringBetweenRanges start end = do
             startLnPtr <- malloc
             startColPtr <- malloc
-            file <- FFI.getFileLocation start startLnPtr startColPtr nullPtr
+            file <- FFI.getExpansionLocation start startLnPtr startColPtr nullPtr
 
             startLn <- toInteger <$> peek startLnPtr
             startCol <- toInteger <$> peek startColPtr
@@ -193,7 +193,7 @@ sourceStringAtCursor (Cursor _ cursorPtr) =
 
             endLnPtr <- malloc
             endColPtr <- malloc
-            FFI.getFileLocation end endLnPtr endColPtr nullPtr
+            FFI.getExpansionLocation end endLnPtr endColPtr nullPtr
 
             endLn <- toInteger <$> peek endLnPtr
             endCol <- toInteger <$> peek endColPtr

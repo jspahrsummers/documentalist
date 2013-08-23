@@ -31,5 +31,5 @@ void doc_disposeTokenSpellings(char **spellings, unsigned numTokens);
 CXSourceLocation *doc_getRangeStart(const CXSourceRange *range);
 CXSourceLocation *doc_getRangeEnd(const CXSourceRange *range);
 int doc_Range_isNull(const CXSourceRange *range);
-CXFile *doc_getFileLocation(const CXSourceLocation *location, unsigned *line, unsigned *column, unsigned *offset);
+CXFile *doc_getExpansionLocation(const CXSourceLocation *location, unsigned *line, unsigned *column, unsigned *offset);
 char *doc_getFileName(const CXFile *file);
