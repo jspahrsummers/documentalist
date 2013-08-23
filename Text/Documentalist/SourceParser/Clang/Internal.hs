@@ -133,7 +133,7 @@ children deep (Cursor tu ptr) =
                 cursor <- Cursor tu <$> newForeignPtr FFI.p_free cxCursor'
 
                 modifyIORef cursors $ \xs -> xs ++ [cursor]
-                return $ if deep then FFI.recurse else FFI.continue
+                return $ if deep then recurse else continue
 
         dynVisitor <- FFI.mkVisitor visitor
         withForeignPtr ptr $ \cxCursor ->
