@@ -36,8 +36,7 @@ descendantDecls :: Cursor -> [Cursor]
 descendantDecls cursor =
     visitDescendants cursor $ \desc ->
         if isDeclaration desc
-            -- TODO: This should eventually be 'continue', not 'recurse'
-            then (True, recurse)
+            then (True, continue)
             else (False, recurse)
 
 -- | Creates a 'Declaration' from the information at a cursor.
@@ -53,11 +52,18 @@ declFromCursor c =
                     decls = mapMaybe declFromCursor $ descendantDecls c
                 in Just $ Class (Identifier $ getCursorSpelling c) (map Type super) decls
 
+            | k == objcCategoryDecl =
+                let decls = mapMaybe declFromCursor $ descendantDecls c
+                in Just $ Mixin (Identifier $ getCursorSpelling c) (Type "") decls
+
             | k == objcPropertyDecl =
                 Just $ Property (Identifier $ getCursorSpelling c) Nothing
 
             | k == objcInstanceMethodDecl =
                 Just $ InstanceMethod (Identifier $ getCursorSpelling c) [] []
+
+            | k == objcClassMethodDecl =
+                Just $ ClassMethod (Identifier $ getCursorSpelling c) [] []
 
             | otherwise = Nothing
     in declFromCursor' $ cursorKind c
