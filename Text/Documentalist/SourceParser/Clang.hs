@@ -24,12 +24,21 @@ instance Show SourceFile where
 
 instance SourcePackage SourceFile where
     parse src =
-        let declCursors = filter isDeclaration $ children True $ getCursor $ translationUnit src
+        let declCursors = descendantDecls $ getCursor $ translationUnit src
             decls = mapMaybe declFromCursor declCursors
             cmts = map (fmap Comment . getComment) declCursors
             declMap = DeclMap $ Map.fromList $ zip decls cmts
             mod = Module (filePath src) declMap
         in return $ Package "" [mod]
+
+-- | Finds all declaration cursors descendant from the given cursor.
+descendantDecls :: Cursor -> [Cursor]
+descendantDecls cursor =
+    visitDescendants cursor $ \desc ->
+        if isDeclaration desc
+            -- TODO: This should eventually be 'continue', not 'recurse'
+            then (True, recurse)
+            else (False, recurse)
 
 -- | Creates a 'Declaration' from the information at a cursor.
 declFromCursor :: Cursor -> Maybe Declaration
@@ -41,8 +50,8 @@ declFromCursor c =
 
             | k == objcInterfaceDecl =
                 let super = map getCursorSpelling $ childrenOfKind c objcSuperclassRef
-                    decls = map declFromCursor $ children True c
-                in Just $ Class (Identifier $ getCursorSpelling c) (map Type super) (catMaybes decls)
+                    decls = mapMaybe declFromCursor $ descendantDecls c
+                in Just $ Class (Identifier $ getCursorSpelling c) (map Type super) decls
 
             | k == objcPropertyDecl =
                 Just $ Property (Identifier $ getCursorSpelling c) Nothing

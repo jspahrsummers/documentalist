@@ -6,14 +6,13 @@ module Text.Documentalist.SourceParser.Clang.Internal ( Index
                                                       , Cursor(..)
                                                       , getCursor
                                                       , getComment
-                                                      , children
                                                       , sourceStringAtCursor
                                                       , tokensAtCursor
                                                       , isDeclaration
                                                       , cursorKind
                                                       , getCursorSpelling
-                                                      , childrenOfKind
                                                       , visitDescendants
+                                                      , childrenOfKind
                                                       ) where
 
 import Control.Applicative
@@ -145,15 +144,6 @@ visitDescendants (Cursor tu ptr) f =
 
         readIORef cursors
 
--- | Returns cursors for the children of a given cursor.
-children
-    :: Bool         -- ^ Whether to enumerate deeply and return all descendants as well.
-    -> Cursor       -- ^ The cursor to enumerate the children of.
-    -> [Cursor]
-
-children deep cursor =
-    visitDescendants cursor $ \desc -> (True, if deep then recurse else continue)
-
 -- | Reads between two source locations in a file.
 readFileInRange
     :: (Integer, Integer)   -- ^ The 1-indexed line and column of the first character to read.
@@ -276,4 +266,4 @@ cursorKind (Cursor _ cursorPtr) =
 -- | Returns the immediate children of the given cursor that are of the given kind.
 childrenOfKind :: Cursor -> CursorKind -> [Cursor]
 childrenOfKind cursor kind =
-    filter ((==) kind . cursorKind) $ children False cursor
+    visitDescendants cursor $ \child -> (cursorKind child == kind, continue)
