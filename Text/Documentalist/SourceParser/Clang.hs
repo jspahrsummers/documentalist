@@ -6,6 +6,7 @@ module Text.Documentalist.SourceParser.Clang ( SourceFile
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Writer.Strict
+import Data.Char
 import qualified Data.Map.Strict as Map
 import Data.Maybe
 import System.IO
@@ -30,6 +31,22 @@ instance SourcePackage SourceFile where
 walkFromCursor :: Cursor -> [Declaration (Maybe Comment)]
 walkFromCursor c =
     mapMaybe parseDecl $ descendantDecls c
+
+-- | Retrieves the comment associated with the cursor, and strips out comment markers if needed.
+strippedComment :: Cursor -> Maybe Comment
+strippedComment c =
+    let pred :: Char -> Bool
+        pred '/' = True
+        pred '*' = True
+        pred '!' = True
+        pred c = isSpace c
+
+        stripLines :: [String] -> [String]
+        stripLines = map $ dropWhile pred
+
+        transform :: String -> Comment
+        transform = Comment . init . unlines . stripLines . lines
+    in fmap transform $ getComment c
 
 -- | Finds all declaration cursors descendant from the given cursor.
 descendantDecls :: Cursor -> [Cursor]
@@ -65,7 +82,7 @@ parseDecl c
 
     | otherwise = Nothing
     where k = cursorKind c
-          comment = fmap Comment $ getComment c
+          comment = strippedComment c
 
 -- | Creates a Clang 'SourceFile' from a file on disk.
 newSourceFile :: FilePath -> SourceFile

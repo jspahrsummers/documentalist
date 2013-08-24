@@ -51,7 +51,7 @@ newtype Comment = Comment String
     deriving Eq
 
 instance Show Comment where
-    show (Comment str) = str
+    show (Comment str) = "{- " ++ str ++ " -}"
 
 -- | A single module in the source language.
 --
