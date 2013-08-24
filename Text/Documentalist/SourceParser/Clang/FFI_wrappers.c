@@ -36,55 +36,6 @@ unsigned doc_isDeclaration(const CXCursor *cursor) {
 	return clang_isDeclaration(clang_getCursorKind(*cursor));
 }
 
-CXSourceRange *doc_getCursorExtent(const CXCursor *cursor) {
-	return doc_dupValue(clang_getCursorExtent(*cursor));
-}
-
-CXToken *doc_tokenize(CXTranslationUnit unit, const CXSourceRange *range, unsigned *numTokens) {
-	CXToken *tokens = NULL;
-	clang_tokenize(unit, *range, &tokens, numTokens);
-	return tokens;
-}
-
-char **doc_getTokenSpellings(CXTranslationUnit unit, const CXToken *tokens, unsigned numTokens) {
-	char **spellings = malloc(sizeof(*spellings) * numTokens);
-	for (unsigned i = 0; i < numTokens; i++) {
-		spellings[i] = doc_fromCXString(clang_getTokenSpelling(unit, tokens[i]));
-	}
-
-	return spellings;
-}
-
-void doc_disposeTokenSpellings(char **spellings, unsigned numTokens) {
-	for (unsigned i = 0; i < numTokens; i++) {
-		free(spellings[i]);
-	}
-
-	free(spellings);
-}
-
-CXSourceLocation *doc_getRangeStart(const CXSourceRange *range) {
-	return doc_dupValue(clang_getRangeStart(*range));
-}
-
-CXSourceLocation *doc_getRangeEnd(const CXSourceRange *range) {
-	return doc_dupValue(clang_getRangeEnd(*range));
-}
-
-CXFile *doc_getExpansionLocation(const CXSourceLocation *location, unsigned *line, unsigned *column, unsigned *offset) {
-	CXFile file;
-	clang_getExpansionLocation(*location, &file, line, column, offset);
-	return doc_dupValue(file);
-}
-
-char *doc_getFileName(const CXFile *file) {
-	return doc_fromCXString(clang_getFileName(*file));
-}
-
-int doc_Range_isNull(const CXSourceRange *range) {
-	return clang_Range_isNull(*range);
-}
-
 enum CXCursorKind doc_getCursorKind(const CXCursor *cursor) {
 	return clang_getCursorKind(*cursor);
 }

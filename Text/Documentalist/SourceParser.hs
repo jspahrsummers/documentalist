@@ -1,10 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Text.Documentalist.SourceParser where
 
-import Control.Exception
-import Data.List
-import qualified Data.Map.Strict as Map
-import Data.Monoid
 import Text.Documentalist.Util
 
 -- | An identifier, as it would be written in the source language.
