@@ -3,6 +3,7 @@ module Text.Documentalist.SourceParser where
 
 import Control.Exception
 import Data.Map.Strict
+import Data.Monoid
 
 -- | An identifier, as it would be written in the source language.
 newtype Identifier = Identifier String
@@ -63,6 +64,10 @@ instance (Show t) => Show (DeclMap t) where
         let show' :: Declaration -> Maybe t -> String -> String
             show' decl mt str = str ++ "\n\t" ++ show decl ++ ": " ++ show mt
         in foldrWithKey show' "{" dm ++ "\n}"
+
+instance Monoid (DeclMap t) where
+    mempty = DeclMap mempty
+    mappend (DeclMap a) (DeclMap b) = DeclMap $ mappend a b
 
 -- | A single module in the source language.
 data Module t = Module String (DeclMap t)
