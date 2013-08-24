@@ -7,8 +7,8 @@ import Text.Documentalist.SourceParser
 
 main :: IO ()
 main = do
-    f_test <- newSourceFile "Tests/Fixtures/test_header.h"
-    f_rac <- newSourceFile "Tests/Fixtures/RACSignal.h"
+    let f_test = newSourceFile "Tests/Fixtures/test_header.h"
+    let f_rac = newSourceFile "Tests/Fixtures/RACSignal.h"
     p_test <- parse f_test
     p_rac <- parse f_rac
     print p_rac
