@@ -34,3 +34,12 @@ newtype CursorKind = CursorKind CInt
     , ibOutletAttr = CXCursor_IBOutletAttr
     , macroDefinition = CXCursor_MacroDefinition
     }
+
+newtype CursorVisitResult = CursorVisitResult CInt
+    deriving (Eq, Show)
+
+#{enum CursorVisitResult, CursorVisitResult
+    , break = CXChildVisit_Break
+    , continue = CXChildVisit_Continue
+    , recurse = CXChildVisit_Recurse
+    }

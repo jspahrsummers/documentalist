@@ -2,7 +2,10 @@
 module Text.Documentalist.SourceParser where
 
 import Control.Exception
-import Data.Map.Strict
+import Data.List
+import qualified Data.Map.Strict as Map
+import Data.Monoid
+import Text.Documentalist.Util
 
 -- | An identifier, as it would be written in the source language.
 newtype Identifier = Identifier String
@@ -28,7 +31,7 @@ type ResultTypes = [Type]
 type UnderlyingType = Maybe Type
 
 -- | Maps declarations to language-specific annotations.
-type AnnotationMap = Map Declaration [String]
+type AnnotationMap = Map.Map Declaration [String]
 
 -- | Any kind of documentable declaration.
 data Declaration = Class Identifier SuperTypes [Declaration]            -- ^ A class declaration.
@@ -48,29 +51,47 @@ data Declaration = Class Identifier SuperTypes [Declaration]            -- ^ A c
 --
 --   This string should be preprocessed to remove markers, like -- in Haskell or // in C.
 newtype Comment = Comment String
-    deriving (Eq)
+    deriving Eq
 
 instance Show Comment where
     show (Comment str) = str
 
 -- | Maps declarations to optional values of type @t@, which should represent some kind
 --   of comment or documentation data.
-newtype DeclMap t = DeclMap (Map Declaration (Maybe t))
-    deriving (Eq, Ord)
+newtype DeclMap t = DeclMap (Map.Map Declaration (Maybe t))
+    deriving Eq
 
 instance (Show t) => Show (DeclMap t) where
     show (DeclMap dm) =
         let show' :: Declaration -> Maybe t -> String -> String
             show' decl mt str = str ++ "\n\t" ++ show decl ++ ": " ++ show mt
-        in foldrWithKey show' "{" dm ++ "\n}"
+        in Map.foldrWithKey show' "{" dm ++ "\n}"
+
+instance Monoid (DeclMap t) where
+    mempty = DeclMap mempty
+    mappend (DeclMap a) (DeclMap b) = DeclMap $ mappend a b
 
 -- | A single module in the source language.
-data Module t = Module String (DeclMap t)
-    deriving (Eq, Ord, Show)
+--
+--   The declaration list should contain any top-level declarations in order of appearance.
+data Module t = Module String (DeclMap t) [Declaration]
+    deriving Eq
+
+instance Eq t => Ord (Module t) where
+    compare (Module a _ _) (Module b _ _) = compare a b
+
+instance Show t => Show (Module t) where
+    show (Module n _ decls) = "Module \"" ++ n ++ "\": " ++ showFormattedList decls
 
 -- | A package to treat as a single unit for the purposes of documentation generation.
 data Package t = Package String [Module t]
-    deriving (Eq, Ord, Show)
+    deriving Eq
+
+instance Eq t => Ord (Package t) where
+    compare (Package a _) (Package b _) = compare a b
+
+instance Show t => Show (Package t) where
+    show (Package n mods) = "Package \"" ++ n ++ "\": " ++ showFormattedList mods
 
 -- | Represents a unparsed package in a source language.
 class SourcePackage p where

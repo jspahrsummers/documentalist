@@ -5,9 +5,9 @@ module Text.Documentalist.SourceParser.Clang ( SourceFile
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Writer.Strict
 import qualified Data.Map.Strict as Map
 import Data.Maybe
-import Foreign.ForeignPtr
 import System.IO
 import Text.Documentalist.SourceParser
 import Text.Documentalist.SourceParser.Clang.Internal
@@ -15,46 +15,76 @@ import Text.Documentalist.SourceParser.Clang.Types
 
 -- | A file in a source language supported by Clang.
 data SourceFile = SourceFile
-    { filePath :: FilePath
-    , translationUnit :: TranslationUnit
-    }
+    { filePath :: FilePath }
 
 instance Show SourceFile where
     show = show . filePath
 
 instance SourcePackage SourceFile where
-    parse src =
-        let declCursors = filter isDeclaration $ children True $ getCursor $ translationUnit src
-            decls = mapMaybe declFromCursor declCursors
-            cmts = map (fmap Comment . getComment) declCursors
-            declMap = DeclMap $ Map.fromList $ zip decls cmts
-            mod = Module (filePath src) declMap
+    parse src = do {
+        tux <- newIndex >>= newTranslationUnit (filePath src);
+        let tu = getCursor $ tux
+            (decls, declMap) = runWriter $ walkFromCursor tu
+            mod = Module (filePath src) declMap decls
         in return $ Package "" [mod]
+      }
 
--- | Creates a 'Declaration' from the information at a cursor.
-declFromCursor :: Cursor -> Maybe Declaration
-declFromCursor c =
-    let declFromCursor' :: CursorKind -> Maybe Declaration
-        declFromCursor' k
+-- | A 'Writer' for accumulating 'DeclMap' entries while walking the AST.
+type Walker = Writer (DeclMap Comment)
+
+-- | Traverses the AST, beginning with the given cursor.
+walkFromCursor :: Cursor -> Walker [Declaration]
+walkFromCursor c =
+    let declCursors = descendantDecls c
+    in catMaybes <$> mapM parseDecl declCursors
+
+-- | Finds all declaration cursors descendant from the given cursor.
+descendantDecls :: Cursor -> [Cursor]
+descendantDecls c =
+    visitDescendants c $ \desc ->
+        if isDeclaration desc
+            then (True, continue)
+            else (False, recurse)
+
+-- | Parses the declaration at a cursor and adds it to the 'DeclMap'.
+parseDecl :: Cursor -> Walker (Maybe Declaration)
+parseDecl c =
+    let k = cursorKind c
+    
+        parseDecl' :: Walker (Maybe Declaration)
+        parseDecl'
             | k == typedefDecl =
-                Just $ TypeAlias (Identifier $ getCursorSpelling c) (Type "foobar")
+                return $ Just $ TypeAlias (Identifier $ getCursorSpelling c) (Type "foobar")
 
             | k == objcInterfaceDecl =
                 let super = map getCursorSpelling $ childrenOfKind c objcSuperclassRef
-                    decls = map declFromCursor $ children True c
-                in Just $ Class (Identifier $ getCursorSpelling c) (map Type super) (catMaybes decls)
+                in do
+                    decls <- catMaybes <$> mapM parseDecl (descendantDecls c)
+                    return $ Just $ Class (Identifier $ getCursorSpelling c) (map Type super) decls
+
+            | k == objcCategoryDecl = do
+                decls <- catMaybes <$> mapM parseDecl (descendantDecls c)
+                return $ Just $ Mixin (Identifier $ getCursorSpelling c) (Type "") decls
 
             | k == objcPropertyDecl =
-                Just $ Property (Identifier $ getCursorSpelling c) Nothing
+                return $ Just $ Property (Identifier $ getCursorSpelling c) Nothing
 
             | k == objcInstanceMethodDecl =
-                Just $ InstanceMethod (Identifier $ getCursorSpelling c) [] []
+                return $ Just $ InstanceMethod (Identifier $ getCursorSpelling c) [] []
 
-            | otherwise = Nothing
-    in declFromCursor' $ cursorKind c
+            | k == objcClassMethodDecl =
+                return $ Just $ ClassMethod (Identifier $ getCursorSpelling c) [] []
+
+            | otherwise = return Nothing
+    in do
+        mdecl <- parseDecl'
+
+        case mdecl of
+            (Just decl) -> tell $ DeclMap $ Map.singleton decl $ fmap Comment $ getComment c
+            _ -> return ()
+
+        return mdecl
 
 -- | Creates a Clang 'SourceFile' from a file on disk.
-newSourceFile :: FilePath -> IO SourceFile
-newSourceFile path = do
-    tu <- newIndex >>= newTranslationUnit path
-    return SourceFile { translationUnit = tu, filePath = path }
+newSourceFile :: FilePath -> SourceFile
+newSourceFile path = SourceFile { filePath = path }
