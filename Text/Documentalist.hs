@@ -1,6 +1,7 @@
 module Text.Documentalist ( SourceFile
-                          , parse
                           , newSourceFile
+                          , TomDocParser
                           ) where
-import Text.Documentalist.SourceParser
+
+import Text.Documentalist.CommentParser.TomDoc
 import Text.Documentalist.SourceParser.Clang
