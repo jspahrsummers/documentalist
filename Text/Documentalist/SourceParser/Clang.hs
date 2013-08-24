@@ -14,22 +14,21 @@ import Text.Documentalist.SourceParser.Clang.Internal
 import Text.Documentalist.SourceParser.Clang.Types
 
 -- | A file in a source language supported by Clang.
-data SourceFile = SourceFile
-    { filePath :: FilePath
-    , translationUnit :: TranslationUnit
-    }
+data SourceFile = SourceFile { filePath :: FilePath }
 
 instance Show SourceFile where
     show = show . filePath
 
 instance SourcePackage SourceFile where
-    parse src =
-        let declCursors = filter isDeclaration $ children True $ getCursor $ translationUnit src
+    parse src = do {
+        tu <- newIndex >>= newTranslationUnit (filePath src);
+        let declCursors = filter isDeclaration $ children True $ getCursor tu
             decls = mapMaybe declFromCursor declCursors
             cmts = map (fmap Comment . getComment) declCursors
             declMap = DeclMap $ Map.fromList $ zip decls cmts
             mod = Module (filePath src) declMap
         in return $ Package "" [mod]
+    }
 
 -- | Creates a 'Declaration' from the information at a cursor.
 declFromCursor :: Cursor -> Maybe Declaration
@@ -54,7 +53,5 @@ declFromCursor c =
     in declFromCursor' $ cursorKind c
 
 -- | Creates a Clang 'SourceFile' from a file on disk.
-newSourceFile :: FilePath -> IO SourceFile
-newSourceFile path = do
-    tu <- newIndex >>= newTranslationUnit path
-    return SourceFile { translationUnit = tu, filePath = path }
+newSourceFile :: FilePath -> SourceFile
+newSourceFile path = SourceFile { filePath = path }
