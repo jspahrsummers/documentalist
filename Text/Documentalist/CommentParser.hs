@@ -8,7 +8,7 @@ import Text.Documentalist.SourceParser
 data DocBlock = DocBlock
     { summary :: Paragraph
     , description :: [Paragraph]
-    , parameters :: [Parameter]
+    , parameters :: [DocParam]
     , example :: Maybe Code
     , result :: Maybe Result
     } deriving (Eq, Show)
@@ -35,7 +35,7 @@ newtype Code = Code String
     deriving (Eq, Show)
 
 -- | One of the parameters to a Function, or one of the values in an Enumeration.
-data Parameter = Parameter (Declaration ()) [Span]
+data DocParam = DocParam (Declaration ()) [Span]
     deriving (Eq, Show)
 
 -- | Describes the value that a Function returns to its caller.
@@ -55,4 +55,4 @@ instance Error CommentParseError where
 -- | Parses a specific 'Comment' syntax.
 class CommentParser p where
     -- | Parses the comments in the given package into 'DocBlock's.
-    parse :: p -> Package (Maybe Comment) -> Either CommentParseError (Package (Maybe DocBlock))
+    parseDocs :: p -> Package (Maybe Comment) -> Either CommentParseError (Package (Maybe DocBlock))

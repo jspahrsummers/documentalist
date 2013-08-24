@@ -1,7 +1,8 @@
-module Text.Documentalist ( SourceFile
-                          , newSourceFile
-                          , TomDocParser
+module Text.Documentalist ( module Text.Documentalist.SourceParser
+                          , module Text.Documentalist.CommentParser
+                          , module Text.Documentalist.Writer
                           ) where
 
-import Text.Documentalist.CommentParser.TomDoc
-import Text.Documentalist.SourceParser.Clang
+import Text.Documentalist.SourceParser
+import Text.Documentalist.CommentParser
+import Text.Documentalist.Writer

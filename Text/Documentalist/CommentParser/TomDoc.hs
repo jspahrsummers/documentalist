@@ -8,7 +8,7 @@ import Text.Documentalist.SourceParser
 data TomDocParser = TomDocParser
 
 instance CommentParser TomDocParser where
-    parse _ (Package pkg mods) = Right $ Package pkg $ map parseModule mods
+    parseDocs _ (Package pkg mods) = Right $ Package pkg $ map parseModule mods
 
 parseModule :: Module (Maybe Comment) -> Module (Maybe DocBlock)
 parseModule (Module mod decls) = Module mod $ parseDecls decls
