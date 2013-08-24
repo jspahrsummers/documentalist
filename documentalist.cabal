@@ -33,6 +33,7 @@ library
   extra-lib-dirs:     /usr/lib/llvm-3.4/lib /opt/boxen/homebrew/lib /usr/local/lib
   include-dirs:       /usr/lib/llvm-3.4/include /opt/boxen/homebrew/include /usr/local/include
   cc-options:         -std=c99 -Werror
+  ghc-options:        -Wall -fno-warn-unused-do-bind -fno-warn-name-shadowing
   c-sources:          Text/Documentalist/SourceParser/Clang/FFI_wrappers.c
   build-tools:        hsc2hs
 

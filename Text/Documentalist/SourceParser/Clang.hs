@@ -3,13 +3,8 @@ module Text.Documentalist.SourceParser.Clang ( SourceFile
                                              , newSourceFile
                                              ) where
 
-import Control.Applicative
-import Control.Monad
-import Control.Monad.Writer.Strict
 import Data.Char
-import qualified Data.Map.Strict as Map
 import Data.Maybe
-import System.IO
 import Text.Documentalist.SourceParser
 import Text.Documentalist.SourceParser.Clang.Internal
 import Text.Documentalist.SourceParser.Clang.Types

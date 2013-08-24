@@ -18,14 +18,11 @@ module Text.Documentalist.SourceParser.Clang.Internal ( Index
 import Control.Applicative
 import Control.Monad
 import Data.IORef
-import Data.Maybe
 import Foreign.C.String
 import Foreign.ForeignPtr
 import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
 import Foreign.Ptr
-import Foreign.Storable
-import System.IO
 import System.IO.Unsafe
 import Text.Documentalist.SourceParser.Clang.Types
 import qualified Text.Documentalist.SourceParser.Clang.FFI as FFI
