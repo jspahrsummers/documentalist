@@ -6,26 +6,21 @@ module Text.Documentalist.SourceParser.Clang.Internal ( Index
                                                       , Cursor(..)
                                                       , getCursor
                                                       , getComment
-                                                      , children
-                                                      , sourceStringAtCursor
-                                                      , tokensAtCursor
                                                       , isDeclaration
                                                       , cursorKind
                                                       , getCursorSpelling
+                                                      , visitDescendants
                                                       , childrenOfKind
                                                       ) where
 
 import Control.Applicative
 import Control.Monad
 import Data.IORef
-import Data.Maybe
 import Foreign.C.String
 import Foreign.ForeignPtr
 import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
 import Foreign.Ptr
-import Foreign.Storable
-import System.IO
 import System.IO.Unsafe
 import Text.Documentalist.SourceParser.Clang.Types
 import qualified Text.Documentalist.SourceParser.Clang.FFI as FFI
@@ -38,10 +33,6 @@ data TranslationUnit = TranslationUnit Index (ForeignPtr ())
 
 -- | A movable cursor into a translation unit.
 data Cursor = Cursor TranslationUnit (ForeignPtr ())
-
--- | A string from the source file that represents a token.
-newtype Token = Token String
-    deriving (Eq, Show)
 
 -- | Builds an array of C strings.
 --
@@ -117,13 +108,15 @@ getCursorSpelling :: Cursor -> String
 getCursorSpelling (Cursor _ ptr) =
     unsafePerformIO $ withForeignPtr ptr $ FFI.getCursorSpelling >=> wrapCString
 
--- | Returns cursors for the children of a given cursor.
-children
-    :: Bool         -- ^ Whether to enumerate deeply and return all descendants as well.
-    -> Cursor       -- ^ The cursor to enumerate the children of.
-    -> [Cursor]
+-- | Visits the descendants of a cursor.
+visitDescendants
+    :: Cursor                                   -- ^ The cursor to visit the descendants of.
+    -> (Cursor -> (Bool, CursorVisitResult))    -- ^ A function to run over each descendant, starting with immediate children.
+                                                --   The 'Bool' is whether to include this cursor in the result.
+                                                --   The 'CursorVisitResult' determines how enumeration should continue.
+    -> [Cursor]                                 -- ^ A list of cursors for which 'True' was returned.
 
-children deep (Cursor tu ptr) =
+visitDescendants (Cursor tu ptr) f =
     unsafePerformIO $ do
         cursors <- newIORef []
 
@@ -132,122 +125,15 @@ children deep (Cursor tu ptr) =
                 cxCursor' <- FFI.dupCursor cxCursor
                 cursor <- Cursor tu <$> newForeignPtr FFI.p_free cxCursor'
 
-                modifyIORef cursors $ \xs -> xs ++ [cursor]
-                return $ if deep then FFI.recurse else FFI.continue
+                let (b, v) = f cursor
+                when b $ modifyIORef cursors (++ [cursor])
+                return v
 
         dynVisitor <- FFI.mkVisitor visitor
         withForeignPtr ptr $ \cxCursor ->
             FFI.visitChildren cxCursor dynVisitor
 
         readIORef cursors
-
--- | Reads between two source locations in a file.
-readFileInRange
-    :: (Integer, Integer)   -- ^ The 1-indexed line and column of the first character to read.
-    -> (Integer, Integer)   -- ^ The 1-indexed line and column of the last character to read.
-    -> FilePath             -- ^ The file to read from.
-    -> IO String
-
-readFileInRange (startLn, startCol) (endLn, endCol) file =
-    withFile file ReadMode $ \fd -> do
-        let readToLn :: Integer -> IO String
-            readToLn 0 = error "Cannot skip to line 0"
-            readToLn 1 = return ""
-            readToLn ln = do
-                s <- hGetLine fd
-                t <- readToLn $ ln - 1
-                return $ s ++ t
-
-            readToCol :: Integer -> IO String
-            readToCol 0 = error "Cannot skip to column 0"
-            readToCol 1 = return ""
-            readToCol col = do
-                c <- hGetChar fd
-                s <- readToCol $ col - 1
-                return $ c : s
-
-        readToLn startLn
-        readToCol startCol
-
-        str <- if startLn == endLn
-                then readToCol $ endCol - startCol
-                else liftM2 (++) (readToLn $ endLn - startLn) (readToCol endCol)
-
-        -- The end column is inclusive, so read one more character.
-        c <- hGetChar fd
-        return $ str ++ [c]
-
--- | Gets the string of source code associated with a cursor, if any.
-sourceStringAtCursor :: Cursor -> IO (Maybe String)
-sourceStringAtCursor (Cursor _ cursorPtr) =
-    let sourceStringBetweenRanges :: FFI.CXSourceRange -> FFI.CXSourceRange -> IO (Maybe String)
-        sourceStringBetweenRanges start end = do
-            startLnPtr <- malloc
-            startColPtr <- malloc
-            file <- FFI.getFileLocation start startLnPtr startColPtr nullPtr
-
-            startLn <- toInteger <$> peek startLnPtr
-            startCol <- toInteger <$> peek startColPtr
-            free startLnPtr
-            free startColPtr
-
-            endLnPtr <- malloc
-            endColPtr <- malloc
-            FFI.getFileLocation end endLnPtr endColPtr nullPtr
-
-            endLn <- toInteger <$> peek endLnPtr
-            endCol <- toInteger <$> peek endColPtr
-            free endLnPtr
-            free endColPtr
-
-            filename <- FFI.getFileName file
-            FFI.free file
-
-            if filename == nullPtr
-                then return Nothing
-                else do
-                    str <- wrapCString filename
-                    Just <$> readFileInRange (startLn, startCol) (endLn, endCol) str
-    in do
-        ex <- withForeignPtr cursorPtr $ \cxCursor ->
-            FFI.getCursorExtent cxCursor
-
-        start <- FFI.getRangeStart ex
-        end <- FFI.getRangeEnd ex
-        FFI.free ex
-
-        str <- if FFI.isNullRange start == 0 && FFI.isNullRange end == 0
-                then sourceStringBetweenRanges start end
-                else return Nothing
-
-        FFI.free start
-        FFI.free end
-        return str
-
--- | Creates tokens for the source code associated with a cursor, if any.
-tokensAtCursor :: Cursor -> [Token]
-tokensAtCursor (Cursor (TranslationUnit _ tuPtr) cursorPtr) =
-    unsafePerformIO $ do
-        range <- withForeignPtr cursorPtr $ \cxCursor ->
-            FFI.getCursorExtent cxCursor
-
-        strs <- withForeignPtr tuPtr $ \cxTU -> do
-            countPtr <- malloc
-            tokenSet <- FFI.tokenize cxTU range countPtr
-
-            count <- peek countPtr
-            free countPtr
-
-            spellings <- FFI.getTokenSpellings cxTU tokenSet count
-            FFI.disposeTokens cxTU tokenSet count
-
-            cStrs <- peekArray (fromInteger $ toInteger count) spellings
-            FFI.disposeTokenSpellings spellings count
-
-            mapM wrapCString cStrs
-
-        FFI.free range
-        return $ map Token strs
 
 -- | Returns whether a cursor refers to a declaration.
 isDeclaration :: Cursor -> Bool
@@ -263,4 +149,4 @@ cursorKind (Cursor _ cursorPtr) =
 -- | Returns the immediate children of the given cursor that are of the given kind.
 childrenOfKind :: Cursor -> CursorKind -> [Cursor]
 childrenOfKind cursor kind =
-    filter ((==) kind . cursorKind) $ children False cursor
+    visitDescendants cursor $ \child -> (cursorKind child == kind, continue)

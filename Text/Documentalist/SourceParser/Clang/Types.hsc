@@ -1,10 +1,6 @@
 module Text.Documentalist.SourceParser.Clang.Types where
 
-import Control.Applicative
-import Foreign
 import Foreign.C
-import Foreign.C.Types
-import Foreign.Ptr
 
 #include <clang-c/Index.h>
 
@@ -33,4 +29,13 @@ newtype CursorKind = CursorKind CInt
     , ibActionAttr = CXCursor_IBActionAttr
     , ibOutletAttr = CXCursor_IBOutletAttr
     , macroDefinition = CXCursor_MacroDefinition
+    }
+
+newtype CursorVisitResult = CursorVisitResult CInt
+    deriving (Eq, Show)
+
+#{enum CursorVisitResult, CursorVisitResult
+    , break = CXChildVisit_Break
+    , continue = CXChildVisit_Continue
+    , recurse = CXChildVisit_Recurse
     }

@@ -21,7 +21,7 @@ data Paragraph = TextParagraph [Span]
 
 -- | Represents a portion of text in a documentation string.
 data Span = PlainText String
-          | Reference Declaration
+          | Reference (Declaration ())
           | WebLink String
           | InlineImage String
           | InlineCode Code
@@ -35,7 +35,7 @@ newtype Code = Code String
     deriving (Eq, Show)
 
 -- | One of the parameters to a Function, or one of the values in an Enumeration.
-data DocParam = DocParam Declaration [Span]
+data DocParam = DocParam (Declaration ()) [Span]
     deriving (Eq, Show)
 
 -- | Describes the value that a Function returns to its caller.
@@ -47,4 +47,4 @@ class MonadError e p => CommentParser e p where
     -- | Parses the comments in the given package into 'DocBlock's.
     --
     --   Any errors will be indicated using @throwError@.
-    parseDocs :: Package Comment -> p (Package DocBlock)
+    parseDocs :: Package (Maybe Comment) -> p (Package (Maybe DocBlock))

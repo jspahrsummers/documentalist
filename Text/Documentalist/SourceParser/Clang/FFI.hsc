@@ -1,10 +1,8 @@
 module Text.Documentalist.SourceParser.Clang.FFI where
 
-import Control.Applicative
 import Foreign
 import Foreign.C
 import Foreign.C.Types
-import Foreign.Ptr
 import Text.Documentalist.SourceParser.Clang.Types
 
 #include <clang-c/Index.h>
@@ -19,22 +17,13 @@ type CXTranslationUnit = Ptr ()
 type CXUnsavedFile = Ptr ()
 
 -- | The type of a function that can visit a cursor's children.
-type CXVisitor = CXCursor -> CXCursor -> IO CXChildVisitResult
+type CXVisitor = CXCursor -> CXCursor -> IO CursorVisitResult
 
 newtype CXTranslationUnitOption = CXTranslationUnitOption { unCXTranslationUnitOption :: CUInt }
     deriving (Eq, Show)
 
-newtype CXChildVisitResult = CXChildVisitResult CInt
-    deriving (Eq, Show)
-
 #{enum CXTranslationUnitOption, CXTranslationUnitOption
     , noOptions = CXTranslationUnit_None
-    }
-
-#{enum CXChildVisitResult, CXChildVisitResult
-    , break = CXChildVisit_Break
-    , continue = CXChildVisit_Continue
-    , recurse = CXChildVisit_Recurse
     }
 
 combineOptions :: [CXTranslationUnitOption] -> CXTranslationUnitOption
@@ -60,36 +49,6 @@ foreign import ccall unsafe "FFI_wrappers.h doc_getTranslationUnitCursor"
 
 foreign import ccall unsafe "FFI_wrappers.h doc_isDeclaration"
     isDeclaration :: CXCursor -> CUInt
-
-foreign import ccall unsafe "FFI_wrappers.h doc_getCursorExtent"
-    getCursorExtent :: CXCursor -> IO CXSourceRange
-
-foreign import ccall unsafe "FFI_wrappers.h doc_tokenize"
-    tokenize :: CXTranslationUnit -> CXSourceRange -> Ptr CUInt -> IO CXTokenSet
-
-foreign import ccall unsafe "clang_disposeTokens"
-    disposeTokens :: CXTranslationUnit -> CXTokenSet -> CUInt -> IO ()
-
-foreign import ccall unsafe "FFI_wrappers.h doc_getTokenSpellings"
-    getTokenSpellings :: CXTranslationUnit -> CXTokenSet -> CUInt -> IO (Ptr CString)
-
-foreign import ccall unsafe "FFI_wrappers.h doc_disposeTokenSpellings"
-    disposeTokenSpellings :: Ptr CString -> CUInt -> IO ()
-
-foreign import ccall unsafe "FFI_wrappers.h doc_getRangeStart"
-    getRangeStart :: CXSourceRange -> IO CXSourceLocation
-
-foreign import ccall unsafe "FFI_wrappers.h doc_getRangeEnd"
-    getRangeEnd :: CXSourceRange -> IO CXSourceLocation
-
-foreign import ccall unsafe "FFI_wrappers.h doc_getFileLocation"
-    getFileLocation :: CXSourceLocation -> Ptr CUInt -> Ptr CUInt -> Ptr CUInt -> IO CXFile
-
-foreign import ccall unsafe "FFI_wrappers.h doc_getFileName"
-    getFileName :: CXFile -> IO CString
-
-foreign import ccall unsafe "FFI_wrappers.h doc_Range_isNull"
-    isNullRange :: CXSourceRange -> CInt
 
 foreign import ccall unsafe "free"
     free :: Ptr () -> IO ()
