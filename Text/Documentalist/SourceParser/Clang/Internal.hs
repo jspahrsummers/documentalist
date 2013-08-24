@@ -6,12 +6,12 @@ module Text.Documentalist.SourceParser.Clang.Internal ( Index
                                                       , Cursor(..)
                                                       , getCursor
                                                       , getComment
-                                                      , children
                                                       , sourceStringAtCursor
                                                       , tokensAtCursor
                                                       , isDeclaration
                                                       , cursorKind
                                                       , getCursorSpelling
+                                                      , visitDescendants
                                                       , childrenOfKind
                                                       ) where
 
@@ -117,13 +117,15 @@ getCursorSpelling :: Cursor -> String
 getCursorSpelling (Cursor _ ptr) =
     unsafePerformIO $ withForeignPtr ptr $ FFI.getCursorSpelling >=> wrapCString
 
--- | Returns cursors for the children of a given cursor.
-children
-    :: Bool         -- ^ Whether to enumerate deeply and return all descendants as well.
-    -> Cursor       -- ^ The cursor to enumerate the children of.
-    -> [Cursor]
+-- | Visits the descendants of a cursor.
+visitDescendants
+    :: Cursor                                   -- ^ The cursor to visit the descendants of.
+    -> (Cursor -> (Bool, CursorVisitResult))    -- ^ A function to run over each descendant, starting with immediate children.
+                                                --   The 'Bool' is whether to include this cursor in the result.
+                                                --   The 'CursorVisitResult' determines how enumeration should continue.
+    -> [Cursor]                                 -- ^ A list of cursors for which 'True' was returned.
 
-children deep (Cursor tu ptr) =
+visitDescendants (Cursor tu ptr) f =
     unsafePerformIO $ do
         cursors <- newIORef []
 
@@ -132,8 +134,9 @@ children deep (Cursor tu ptr) =
                 cxCursor' <- FFI.dupCursor cxCursor
                 cursor <- Cursor tu <$> newForeignPtr FFI.p_free cxCursor'
 
-                modifyIORef cursors $ \xs -> xs ++ [cursor]
-                return $ if deep then FFI.recurse else FFI.continue
+                let (b, v) = f cursor
+                when b $ modifyIORef cursors (++ [cursor])
+                return v
 
         dynVisitor <- FFI.mkVisitor visitor
         withForeignPtr ptr $ \cxCursor ->
@@ -263,4 +266,4 @@ cursorKind (Cursor _ cursorPtr) =
 -- | Returns the immediate children of the given cursor that are of the given kind.
 childrenOfKind :: Cursor -> CursorKind -> [Cursor]
 childrenOfKind cursor kind =
-    filter ((==) kind . cursorKind) $ children False cursor
+    visitDescendants cursor $ \child -> (cursorKind child == kind, continue)

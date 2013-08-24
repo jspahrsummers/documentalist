@@ -19,22 +19,13 @@ type CXTranslationUnit = Ptr ()
 type CXUnsavedFile = Ptr ()
 
 -- | The type of a function that can visit a cursor's children.
-type CXVisitor = CXCursor -> CXCursor -> IO CXChildVisitResult
+type CXVisitor = CXCursor -> CXCursor -> IO CursorVisitResult
 
 newtype CXTranslationUnitOption = CXTranslationUnitOption { unCXTranslationUnitOption :: CUInt }
     deriving (Eq, Show)
 
-newtype CXChildVisitResult = CXChildVisitResult CInt
-    deriving (Eq, Show)
-
 #{enum CXTranslationUnitOption, CXTranslationUnitOption
     , noOptions = CXTranslationUnit_None
-    }
-
-#{enum CXChildVisitResult, CXChildVisitResult
-    , break = CXChildVisit_Break
-    , continue = CXChildVisit_Continue
-    , recurse = CXChildVisit_Recurse
     }
 
 combineOptions :: [CXTranslationUnitOption] -> CXTranslationUnitOption

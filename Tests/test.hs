@@ -18,9 +18,7 @@ main = do
       , testCase "rac_num" (racNum p_rac)
       ] mempty
 
-testNum :: Package Comment -> Assertion
 testNum (Package p modules) = length modules @?= 1
 
 -- TODO: work out right numbers
-racNum :: Package Comment -> Assertion
 racNum (Package p modules) = length modules @?= 1
