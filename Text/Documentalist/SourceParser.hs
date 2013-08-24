@@ -49,7 +49,7 @@ data Declaration = Class Identifier SuperTypes [Declaration]            -- ^ A c
 --
 --   This string should be preprocessed to remove markers, like -- in Haskell or // in C.
 newtype Comment = Comment String
-    deriving (Eq)
+    deriving Eq
 
 instance Show Comment where
     show (Comment str) = str
@@ -57,7 +57,7 @@ instance Show Comment where
 -- | Maps declarations to optional values of type @t@, which should represent some kind
 --   of comment or documentation data.
 newtype DeclMap t = DeclMap (Map Declaration (Maybe t))
-    deriving (Eq, Ord)
+    deriving Eq
 
 instance (Show t) => Show (DeclMap t) where
     show (DeclMap dm) =
@@ -73,11 +73,17 @@ instance Monoid (DeclMap t) where
 --
 --   The declaration list should contain any top-level declarations in order of appearance.
 data Module t = Module String (DeclMap t) [Declaration]
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Show)
+
+instance Eq t => Ord (Module t) where
+    compare (Module a _ _) (Module b _ _) = compare a b
 
 -- | A package to treat as a single unit for the purposes of documentation generation.
 data Package t = Package String [Module t]
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Show)
+
+instance Eq t => Ord (Package t) where
+    compare (Package a _) (Package b _) = compare a b
 
 -- | Represents a unparsed package in a source language.
 class SourcePackage p where
