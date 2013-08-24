@@ -1,10 +1,6 @@
 module Text.Documentalist.SourceParser.Clang.Types where
 
-import Control.Applicative
-import Foreign
 import Foreign.C
-import Foreign.C.Types
-import Foreign.Ptr
 
 #include <clang-c/Index.h>
 
