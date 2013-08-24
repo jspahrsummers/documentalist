@@ -28,10 +28,11 @@ library
   other-modules:      Text.Documentalist.SourceParser.Clang.FFI
                       Text.Documentalist.SourceParser.Clang.Types
                       Text.Documentalist.SourceParser.Clang.Internal
+                      Text.Documentalist.Util
   extra-libraries:    clang
   extra-lib-dirs:     /usr/lib/llvm-3.4/lib /opt/boxen/homebrew/lib /usr/local/lib
   include-dirs:       /usr/lib/llvm-3.4/include /opt/boxen/homebrew/include /usr/local/include
-  cc-options:         -std=c99
+  cc-options:         -std=c99 -Werror
   c-sources:          Text/Documentalist/SourceParser/Clang/FFI_wrappers.c
   build-tools:        hsc2hs
 
