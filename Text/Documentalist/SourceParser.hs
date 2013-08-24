@@ -30,22 +30,19 @@ type ResultTypes = [Type]
 -- | Represents the underlying type for a declaration, if the source language supports it and one was provided.
 type UnderlyingType = Maybe Type
 
--- | Maps declarations to language-specific annotations.
-type AnnotationMap = Map.Map Declaration [String]
-
--- | Any kind of documentable declaration.
-data Declaration = Class Identifier SuperTypes [Declaration]            -- ^ A class declaration.
-                 | Interface Identifier SuperTypes [Declaration]        -- ^ An abstract interface, or Objective-C protocol definition.
-                 | Mixin Identifier Type [Declaration]                  -- ^ A mixin, or Objective-C category declaration.
-                 | Property Identifier UnderlyingType                   -- ^ A property declaration in a class.
-                 | Enumeration Identifier UnderlyingType [Declaration]  -- ^ An enumeration.
-                 | Constant Identifier UnderlyingType                   -- ^ A constant within an enumeration or class, or outside of any scope.
-                 | Function Identifier ResultTypes [Declaration]        -- ^ A function.
-                 | ClassMethod Identifier ResultTypes [Declaration]     -- ^ A class method or static member function.
-                 | InstanceMethod Identifier ResultTypes [Declaration]  -- ^ An instance method or member function.
-                 | Parameter Identifier UnderlyingType                  -- ^ The parameter to a function or method.
-                 | TypeAlias Identifier Type                            -- ^ A redeclaration of a type under a different name.
-                 deriving (Eq, Ord, Show)
+-- | Any kind of documentable declaration, associated with data of type @t@.
+data Declaration t = Class t Identifier SuperTypes [Declaration t]              -- ^ A class declaration.
+                   | Interface t Identifier SuperTypes [Declaration t]          -- ^ An abstract interface, or Objective-C protocol definition.
+                   | Mixin t Identifier Type [Declaration t]                    -- ^ A mixin, or Objective-C category declaration.
+                   | Property t Identifier UnderlyingType                       -- ^ A property declaration in a class.
+                   | Enumeration t Identifier UnderlyingType [Declaration t]    -- ^ An enumeration.
+                   | Constant t Identifier UnderlyingType                       -- ^ A constant within an enumeration or class, or outside of any scope.
+                   | Function t Identifier ResultTypes [Declaration t]          -- ^ A function.
+                   | ClassMethod t Identifier ResultTypes [Declaration t]       -- ^ A class method or static member function.
+                   | InstanceMethod t Identifier ResultTypes [Declaration t]    -- ^ An instance method or member function.
+                   | Parameter t Identifier UnderlyingType                      -- ^ The parameter to a function or method.
+                   | TypeAlias t Identifier Type                                -- ^ A redeclaration of a type under a different name.
+                   deriving (Eq, Show)
 
 -- | The meaningful body of a comment in the source language.
 --
@@ -56,32 +53,17 @@ newtype Comment = Comment String
 instance Show Comment where
     show (Comment str) = str
 
--- | Maps declarations to optional values of type @t@, which should represent some kind
---   of comment or documentation data.
-newtype DeclMap t = DeclMap (Map.Map Declaration (Maybe t))
-    deriving Eq
-
-instance (Show t) => Show (DeclMap t) where
-    show (DeclMap dm) =
-        let show' :: Declaration -> Maybe t -> String -> String
-            show' decl mt str = str ++ "\n\t" ++ show decl ++ ": " ++ show mt
-        in Map.foldrWithKey show' "{" dm ++ "\n}"
-
-instance Monoid (DeclMap t) where
-    mempty = DeclMap mempty
-    mappend (DeclMap a) (DeclMap b) = DeclMap $ mappend a b
-
 -- | A single module in the source language.
 --
 --   The declaration list should contain any top-level declarations in order of appearance.
-data Module t = Module String (DeclMap t) [Declaration]
+data Module t = Module String [Declaration t]
     deriving Eq
 
 instance Eq t => Ord (Module t) where
-    compare (Module a _ _) (Module b _ _) = compare a b
+    compare (Module a _) (Module b _) = compare a b
 
 instance Show t => Show (Module t) where
-    show (Module n _ decls) = "Module \"" ++ n ++ "\": " ++ showFormattedList decls
+    show (Module n decls) = "Module \"" ++ n ++ "\": " ++ showFormattedList decls
 
 -- | A package to treat as a single unit for the purposes of documentation generation.
 data Package t = Package String [Module t]
@@ -98,4 +80,4 @@ class SourcePackage p where
     -- | Parses the package into a language-independent form.
     --
     --   Errors may be indicated with `IOException`s.
-    parse :: p -> IO (Package Comment)
+    parse :: p -> IO (Package (Maybe Comment))

@@ -25,18 +25,13 @@ instance Show SourceFile where
 instance SourcePackage SourceFile where
     parse src =
         let tu = getCursor $ translationUnit src
-            (decls, declMap) = runWriter $ walkFromCursor tu
-            mod = Module (filePath src) declMap decls
+            mod = Module (filePath src) $ walkFromCursor tu
         in return $ Package "" [mod]
 
--- | A 'Writer' for accumulating 'DeclMap' entries while walking the AST.
-type Walker = Writer (DeclMap Comment)
-
 -- | Traverses the AST, beginning with the given cursor.
-walkFromCursor :: Cursor -> Walker [Declaration]
+walkFromCursor :: Cursor -> [Declaration (Maybe Comment)]
 walkFromCursor c =
-    let declCursors = descendantDecls c
-    in catMaybes <$> mapM parseDecl declCursors
+    mapMaybe parseDecl $ descendantDecls c
 
 -- | Finds all declaration cursors descendant from the given cursor.
 descendantDecls :: Cursor -> [Cursor]
@@ -46,44 +41,33 @@ descendantDecls c =
             then (True, continue)
             else (False, recurse)
 
--- | Parses the declaration at a cursor and adds it to the 'DeclMap'.
-parseDecl :: Cursor -> Walker (Maybe Declaration)
-parseDecl c =
-    let k = cursorKind c
-    
-        parseDecl' :: Walker (Maybe Declaration)
-        parseDecl'
-            | k == typedefDecl =
-                return $ Just $ TypeAlias (Identifier $ getCursorSpelling c) (Type "foobar")
+-- | Attempts to parse the declaration at a cursor.
+parseDecl :: Cursor -> Maybe (Declaration (Maybe Comment))
+parseDecl c
+    | k == typedefDecl =
+        Just $ TypeAlias comment (Identifier $ getCursorSpelling c) (Type "foobar")
 
-            | k == objcInterfaceDecl =
-                let super = map getCursorSpelling $ childrenOfKind c objcSuperclassRef
-                in do
-                    decls <- catMaybes <$> mapM parseDecl (descendantDecls c)
-                    return $ Just $ Class (Identifier $ getCursorSpelling c) (map Type super) decls
+    | k == objcInterfaceDecl =
+        let super = map getCursorSpelling $ childrenOfKind c objcSuperclassRef
+            decls = mapMaybe parseDecl $ descendantDecls c
+        in Just $ Class comment (Identifier $ getCursorSpelling c) (map Type super) decls
 
-            | k == objcCategoryDecl = do
-                decls <- catMaybes <$> mapM parseDecl (descendantDecls c)
-                return $ Just $ Mixin (Identifier $ getCursorSpelling c) (Type "") decls
+    | k == objcCategoryDecl =
+        let decls = mapMaybe parseDecl $ descendantDecls c
+        in Just $ Mixin comment (Identifier $ getCursorSpelling c) (Type "") decls
 
-            | k == objcPropertyDecl =
-                return $ Just $ Property (Identifier $ getCursorSpelling c) Nothing
+    | k == objcPropertyDecl =
+        Just $ Property comment (Identifier $ getCursorSpelling c) Nothing
 
-            | k == objcInstanceMethodDecl =
-                return $ Just $ InstanceMethod (Identifier $ getCursorSpelling c) [] []
+    | k == objcInstanceMethodDecl =
+        Just $ InstanceMethod comment (Identifier $ getCursorSpelling c) [] []
 
-            | k == objcClassMethodDecl =
-                return $ Just $ ClassMethod (Identifier $ getCursorSpelling c) [] []
+    | k == objcClassMethodDecl =
+        Just $ ClassMethod comment (Identifier $ getCursorSpelling c) [] []
 
-            | otherwise = return Nothing
-    in do
-        mdecl <- parseDecl'
-
-        case mdecl of
-            (Just decl) -> tell $ DeclMap $ Map.singleton decl $ fmap Comment $ getComment c
-            _ -> return ()
-
-        return mdecl
+    | otherwise = Nothing
+    where k = cursorKind c
+          comment = fmap Comment $ getComment c
 
 -- | Creates a Clang 'SourceFile' from a file on disk.
 newSourceFile :: FilePath -> IO SourceFile
