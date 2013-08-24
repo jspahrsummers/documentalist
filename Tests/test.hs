@@ -3,7 +3,7 @@ import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit
 import Text.Documentalist
-import Text.Documentalist.SourceParser
+import Text.Documentalist.SourceParser.Clang
 
 main :: IO ()
 main = do
