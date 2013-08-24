@@ -11,4 +11,4 @@ class (Error e, MonadIO w) => Writer e w where
     -- | Writes formatted documentation.
     --
     --   The destination of the output is determined by the specific 'Writer' used.
-    write :: Package DocBlock -> w (Either e ())
+    write :: Package (Maybe (DocBlock t)) -> w (Either e ())
