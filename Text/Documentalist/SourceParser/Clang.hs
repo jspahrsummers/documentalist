@@ -15,19 +15,19 @@ import Text.Documentalist.SourceParser.Clang.Types
 
 -- | A file in a source language supported by Clang.
 data SourceFile = SourceFile
-    { filePath :: FilePath
-    , translationUnit :: TranslationUnit
-    }
+    { filePath :: FilePath }
 
 instance Show SourceFile where
     show = show . filePath
 
 instance SourcePackage SourceFile where
-    parse src =
-        let tu = getCursor $ translationUnit src
+    parse src = do {
+        tux <- newIndex >>= newTranslationUnit (filePath src);
+        let tu = getCursor $ tux
             (decls, declMap) = runWriter $ walkFromCursor tu
             mod = Module (filePath src) declMap decls
         in return $ Package "" [mod]
+      }
 
 -- | A 'Writer' for accumulating 'DeclMap' entries while walking the AST.
 type Walker = Writer (DeclMap Comment)
@@ -86,7 +86,5 @@ parseDecl c =
         return mdecl
 
 -- | Creates a Clang 'SourceFile' from a file on disk.
-newSourceFile :: FilePath -> IO SourceFile
-newSourceFile path = do
-    tu <- newIndex >>= newTranslationUnit path
-    return SourceFile { translationUnit = tu, filePath = path }
+newSourceFile :: FilePath -> SourceFile
+newSourceFile path = SourceFile { filePath = path }
