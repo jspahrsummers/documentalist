@@ -10,12 +10,15 @@ data TomDocParser = TomDocParser
 instance CommentParser TomDocParser where
     parseDocs _ (Package pkg mods) = Right $ Package pkg $ map parseModule mods
 
+-- | Parses all the comments in a 'Module'.
 parseModule :: Module (Maybe Comment) -> Module (Maybe DocBlock)
 parseModule (Module mod decls) = Module mod $ parseDecls decls
 
+-- | Parses all the comments in a list of 'Declaration's.
 parseDecls :: [Declaration (Maybe Comment)] -> [Declaration (Maybe DocBlock)]
 parseDecls = map parseDecl
 
+-- | Parses the comment of a 'Declaration'.
 parseDecl :: Declaration (Maybe Comment) -> Declaration (Maybe DocBlock)
 parseDecl (Class c i st decls) = Class (parseComment c) i st $ parseDecls decls
 parseDecl (Mixin c i t decls) = Mixin (parseComment c) i t $ parseDecls decls
@@ -24,6 +27,7 @@ parseDecl (ClassMethod c i rt decls) = ClassMethod (parseComment c) i rt $ parse
 parseDecl (Property c i t) = Property (parseComment c) i t
 parseDecl _ = undefined
 
+-- | Parses a single comment.
 parseComment :: Maybe Comment -> Maybe DocBlock
 parseComment c =
     let parseComment' :: Comment -> DocBlock
