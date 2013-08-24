@@ -70,7 +70,9 @@ instance Monoid (DeclMap t) where
     mappend (DeclMap a) (DeclMap b) = DeclMap $ mappend a b
 
 -- | A single module in the source language.
-data Module t = Module String (DeclMap t)
+--
+--   The declaration list should contain any top-level declarations in order of appearance.
+data Module t = Module String (DeclMap t) [Declaration]
     deriving (Eq, Ord, Show)
 
 -- | A package to treat as a single unit for the purposes of documentation generation.

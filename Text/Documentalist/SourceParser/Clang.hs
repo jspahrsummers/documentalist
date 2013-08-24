@@ -25,18 +25,18 @@ instance Show SourceFile where
 instance SourcePackage SourceFile where
     parse src =
         let tu = getCursor $ translationUnit src
-            declMap = execWriter $ walkFromCursor tu
-            mod = Module (filePath src) declMap
+            (decls, declMap) = runWriter $ walkFromCursor tu
+            mod = Module (filePath src) declMap decls
         in return $ Package "" [mod]
 
 -- | A 'Writer' for accumulating 'DeclMap' entries while walking the AST.
 type Walker = Writer (DeclMap Comment)
 
 -- | Traverses the AST, beginning with the given cursor.
-walkFromCursor :: Cursor -> Walker ()
+walkFromCursor :: Cursor -> Walker [Declaration]
 walkFromCursor c =
     let declCursors = descendantDecls c
-    in mapM_ parseDecl declCursors
+    in catMaybes <$> mapM parseDecl declCursors
 
 -- | Finds all declaration cursors descendant from the given cursor.
 descendantDecls :: Cursor -> [Cursor]
