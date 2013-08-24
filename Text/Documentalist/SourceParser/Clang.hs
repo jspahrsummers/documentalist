@@ -14,7 +14,7 @@ import Text.Documentalist.SourceParser.Clang.Internal
 import Text.Documentalist.SourceParser.Clang.Types
 
 -- | A file in a source language supported by Clang.
-data SourceFile = SourceFile { filePath :: FilePath }
+newtype SourceFile = SourceFile { filePath :: FilePath }
 
 instance Show SourceFile where
     show = show . filePath
@@ -54,4 +54,4 @@ declFromCursor c =
 
 -- | Creates a Clang 'SourceFile' from a file on disk.
 newSourceFile :: FilePath -> SourceFile
-newSourceFile path = SourceFile { filePath = path }
+newSourceFile = SourceFile
