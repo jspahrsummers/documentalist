@@ -1,7 +1,5 @@
-module Text.Documentalist ( module Text.Documentalist.SourceParser
-                          , module Text.Documentalist.CommentParser
-                          , module Text.Documentalist.Writer
-                          ) where
-import Text.Documentalist.SourceParser
-import Text.Documentalist.CommentParser
-import Text.Documentalist.Writer
+module Text.Documentalist ( module D ) where
+
+import Text.Documentalist.SourceParser as D
+import Text.Documentalist.CommentParser as D
+import Text.Documentalist.Writer as D
