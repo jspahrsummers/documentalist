@@ -30,7 +30,7 @@ instance Show DocBlock where
                 when (length params > 0) $ tell ["# Parameters:\n" ++ show params ++ "\n"]
                 when (isJust ex) $ tell ["# Example:\n" ++ show (fromJust ex) ++ "\n"]
                 when (isJust res) $ tell ["# Result: " ++ show (fromJust res)]
-        in intercalate "\n" $ execWriter show'
+        in "\n" ++ intercalate "\n" (execWriter show')
 
 -- | A newline-delimited section of text.
 data Paragraph = TextParagraph [Span]
