@@ -1,3 +1,4 @@
+{-# LANGUAGE EmptyDataDecls #-}
 module Text.Documentalist.CommentParser.TomDoc ( TomDocParser(..)
                                                ) where
 
@@ -7,27 +8,29 @@ import Text.Documentalist.CommentParser
 import Text.Documentalist.SourceParser
 
 -- | Parses comments in tomdoc.org format.
-data TomDocParser = TomDocParser
+data TomDocParser
+
+-- For convenience
+type DocB = Maybe (DocBlock (TomDocParser))
 
 instance CommentParser TomDocParser where
-    parseDocs _ (Package pkg mods) = Right $ Package pkg $ map parseModule mods
+    parseDocs (Package pkg mods) = Right $ Package pkg $ map parseModule mods
 
 -- | Parses all the comments in a 'Module'.
-parseModule :: Module (Maybe Comment) -> Module (Maybe DocBlock)
+parseModule :: Module (Maybe Comment) -> Module DocB
 parseModule (Module mod decls) = Module mod $ parseDecls decls
 
 -- | Parses all the comments in a list of 'Declaration's.
-parseDecls :: [Declaration (Maybe Comment)] -> [Declaration (Maybe DocBlock)]
+parseDecls :: [Declaration (Maybe Comment)] -> [Declaration DocB]
 parseDecls = map parseDecl
 
 -- | Parses the comment of a 'Declaration'.
-parseDecl :: Declaration (Maybe Comment) -> Declaration (Maybe DocBlock)
-parseDecl x = fmap parseComment x
+parseDecl :: Declaration (Maybe Comment) -> Declaration DocB
+parseDecl x = fmap (maybe Nothing parseComment) x
 
--- | Parses a single comment.
-parseComment :: Maybe Comment -> Maybe DocBlock
-parseComment Nothing = Nothing
-parseComment (Just (Comment str)) =
+-- | Might parse a single comment.
+parseComment :: Comment -> DocB
+parseComment (Comment str) =
     let paras = splitOn "\n\n" str
 
         isResult :: String -> Bool
@@ -48,7 +51,7 @@ parseComment (Just (Comment str)) =
                 then (Nothing, xs)
                 else (Just $ head rem, pref ++ tail rem)
     
-        parseComment' :: DocBlock
+        parseComment' :: DocBlock TomDocParser
         parseComment' =
             let (res, paras') = extract isResult paras
                 (_, paras'') = extract isParams paras'

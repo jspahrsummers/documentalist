@@ -8,7 +8,7 @@ import Data.Maybe
 import Text.Documentalist.SourceParser
 
 -- | A documentation block for a declaration.
-data DocBlock = DocBlock
+data DocBlock t = DocBlock
     { summary :: Paragraph
     , description :: [Paragraph]
     , parameters :: [DocParam]
@@ -16,7 +16,7 @@ data DocBlock = DocBlock
     , result :: Maybe Result
     } deriving Eq
 
-instance Show DocBlock where
+instance Show (DocBlock t) where
     show doc =
         let desc = description doc
             params = parameters doc
@@ -92,6 +92,6 @@ instance Error CommentParseError where
     strMsg s = CommentParseError { file = Nothing, line = Nothing, message = s }
 
 -- | Parses a specific 'Comment' syntax.
-class CommentParser p where
+class CommentParser a where
     -- | Parses the comments in the given package into 'DocBlock's.
-    parseDocs :: p -> Package (Maybe Comment) -> Either CommentParseError (Package (Maybe DocBlock))
+    parseDocs :: Package (Maybe Comment) -> Either CommentParseError (Package (Maybe (DocBlock a)))
