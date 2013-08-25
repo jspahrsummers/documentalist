@@ -76,7 +76,10 @@ data DocParam = DocParam (Declaration ()) [Span]
 
 -- | Describes the value that a Function returns to its caller.
 newtype Result = Result [Span]
-    deriving (Eq, Show)
+    deriving Eq
+
+instance Show Result where
+    show (Result spans) = show spans
 
 -- | An error that occurred during comment parsing.
 data CommentParseError = CommentParseError
