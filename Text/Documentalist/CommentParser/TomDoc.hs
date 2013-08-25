@@ -1,5 +1,5 @@
 {-# LANGUAGE EmptyDataDecls #-}
-module Text.Documentalist.CommentParser.TomDoc ( TomDocParser(..)
+module Text.Documentalist.CommentParser.TomDoc ( TomDocParser
                                                ) where
 
 import Data.List
