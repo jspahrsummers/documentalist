@@ -70,10 +70,10 @@ parseDecl c
         Just $ Property comment (Identifier $ getCursorSpelling c) Nothing
 
     | k == objcInstanceMethodDecl =
-        Just $ InstanceMethod comment (Identifier $ getCursorSpelling c) [] []
+        Just $ InstanceMethod comment (Identifier $ '-' : getCursorSpelling c) [] []
 
     | k == objcClassMethodDecl =
-        Just $ ClassMethod comment (Identifier $ getCursorSpelling c) [] []
+        Just $ ClassMethod comment (Identifier $ '+' : getCursorSpelling c) [] []
 
     | otherwise = Nothing
     where k = cursorKind c
