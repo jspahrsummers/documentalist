@@ -27,18 +27,28 @@ type ResultTypes = [Type]
 type UnderlyingType = Maybe Type
 
 -- | Any kind of documentable declaration, associated with data of type @t@.
-data Declaration t = Class t Identifier SuperTypes [Declaration t]              -- ^ A class declaration.
-                   | Interface t Identifier SuperTypes [Declaration t]          -- ^ An abstract interface, or Objective-C protocol definition.
-                   | Mixin t Identifier Type [Declaration t]                    -- ^ A mixin, or Objective-C category declaration.
-                   | Property t Identifier UnderlyingType                       -- ^ A property declaration in a class.
-                   | Enumeration t Identifier UnderlyingType [Declaration t]    -- ^ An enumeration.
-                   | Constant t Identifier UnderlyingType                       -- ^ A constant within an enumeration or class, or outside of any scope.
-                   | Function t Identifier ResultTypes [Declaration t]          -- ^ A function.
-                   | ClassMethod t Identifier ResultTypes [Declaration t]       -- ^ A class method or static member function.
-                   | InstanceMethod t Identifier ResultTypes [Declaration t]    -- ^ An instance method or member function.
-                   | Parameter t Identifier UnderlyingType                      -- ^ The parameter to a function or method.
-                   | TypeAlias t Identifier Type                                -- ^ A redeclaration of a type under a different name.
-                   deriving (Eq, Show)
+data Declaration t = DecNode t Identifier DecFNode [Declaration t]
+                   | DecLeaf t Identifier DecFLeaf
+                     deriving (Eq, Show)
+
+data DecFNode = Class           SuperTypes     -- ^ A class declaration.
+              | Interface       SuperTypes     -- ^ An abstract interface, or Objective-C protocol definition.
+              | Mixin           Type           -- ^ A mixin, or Objective-C category declaration.
+              | Enumeration     UnderlyingType -- ^ An enumeration.                   
+              | Function        ResultTypes    -- ^ A function.
+              | ClassMethod     ResultTypes    -- ^ A class method or static member function.
+              | InstanceMethod  ResultTypes    -- ^ An instance method or member function.
+                deriving (Eq, Show)
+
+data DecFLeaf = Property        UnderlyingType -- ^ A property declaration in a class.
+              | Constant        UnderlyingType -- ^ A constant within an enumeration or class, or outside of any scope.
+              | Parameter       UnderlyingType -- ^ The parameter to a function or method.
+              | TypeAlias       Type           -- ^ A redeclaration of a type under a different name.
+                deriving (Eq, Show)
+
+instance Functor Declaration where
+  fmap f (DecNode t i d xs) = (DecNode (f t) i d (map (fmap f) xs))
+  fmap f (DecLeaf t i d)    = (DecLeaf (f t) i d)
 
 -- | The meaningful body of a comment in the source language.
 --
