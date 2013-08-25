@@ -9,10 +9,10 @@ import Text.Documentalist.SourceParser.Clang
 main :: IO ()
 main = do
     let f_test = newSourceFile "Tests/Fixtures/test_header.h"
-    let f_rac = newSourceFile "Tests/Fixtures/RACSignal.h"
+    let f_rac  = newSourceFile "Tests/Fixtures/RACSignal.h"
 
-    p_test <- parse f_test
-    p_rac <- parse f_rac
+    p_test <- parse f_test 
+    p_rac  <- parse f_rac
     print p_rac
 
     let c_test = parseDocs TomDocParser p_test

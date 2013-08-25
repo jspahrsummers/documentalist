@@ -47,8 +47,8 @@ data DecFLeaf = Property        UnderlyingType -- ^ A property declaration in a 
                 deriving (Eq, Show)
 
 instance Functor Declaration where
-  fmap f (DecNode t i d xs) = (DecNode (f t) i d (map (fmap f) xs))
-  fmap f (DecLeaf t i d)    = (DecLeaf (f t) i d)
+    fmap f (DecNode t i d xs) = (DecNode (f t) i d (map (fmap f) xs))
+    fmap f (DecLeaf t i d)    = (DecLeaf (f t) i d)
 
 -- | The meaningful body of a comment in the source language.
 --
