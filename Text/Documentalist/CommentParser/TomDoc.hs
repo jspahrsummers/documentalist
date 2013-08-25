@@ -1,6 +1,7 @@
 module Text.Documentalist.CommentParser.TomDoc ( TomDocParser(..)
                                                ) where
 
+import Data.List.Split
 import Text.Documentalist.CommentParser
 import Text.Documentalist.SourceParser
 
@@ -32,7 +33,6 @@ parseComment :: Maybe Comment -> Maybe DocBlock
 parseComment c =
     let parseComment' :: Comment -> DocBlock
         parseComment' (Comment str) =
-            let spans = map PlainText $ filter (not . null) $ lines str
-                para = TextParagraph spans
-            in DocBlock { summary = para, description = [], parameters = [], example = Nothing, result = Nothing }
+            let paras = map (TextParagraph . (: []) . PlainText) $ splitOn "\n\n" str
+            in DocBlock { summary = head paras, description = tail paras, parameters = [], example = Nothing, result = Nothing }
     in fmap parseComment' c
