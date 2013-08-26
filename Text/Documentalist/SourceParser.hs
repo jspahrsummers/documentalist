@@ -31,8 +31,9 @@ type UnderlyingType = Maybe Type
 -- | Any kind of documentable declaration, associated with data of type @t@.
 data Declaration t = DecLeaf t Identifier DecFLeaf
                    | DecNode t Identifier DecFNode [Declaration t]
-                     deriving (Eq, Show, Functor, Foldable, Traversable)
+                   deriving (Eq, Show, Functor, Foldable, Traversable)
 
+-- | A declaration family type for a declaration that may contain more declarations inside of it
 data DecFNode = Class           SuperTypes     -- ^ A class declaration.
               | Interface       SuperTypes     -- ^ An abstract interface, or Objective-C protocol definition.
               | Mixin           Type           -- ^ A mixin, or Objective-C category declaration.
@@ -40,13 +41,14 @@ data DecFNode = Class           SuperTypes     -- ^ A class declaration.
               | Function        ResultTypes    -- ^ A function.
               | ClassMethod     ResultTypes    -- ^ A class method or static member function.
               | InstanceMethod  ResultTypes    -- ^ An instance method or member function.
-                deriving (Eq, Show)
+              deriving (Eq, Show)
 
+-- | A declaration family type that can not carry any additional declarations
 data DecFLeaf = Property        UnderlyingType -- ^ A property declaration in a class.
               | Constant        UnderlyingType -- ^ A constant within an enumeration or class, or outside of any scope.
               | Parameter       UnderlyingType -- ^ The parameter to a function or method.
               | TypeAlias       Type           -- ^ A redeclaration of a type under a different name.
-                deriving (Eq, Show)
+              deriving (Eq, Show)
 
 -- | The meaningful body of a comment in the source language.
 --
