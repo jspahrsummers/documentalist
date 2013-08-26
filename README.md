@@ -45,14 +45,14 @@ description](documentalist.cabal).
 
 ```
 brew install --with-clang llvm
+cabal install --only-dependencies
 cabal configure
 cabal build
 ```
 
-## Running Tests
+If you want to run the tests:
 
 ```
-brew install --with-clang llvm
 cabal install --only-dependencies --enable-tests
 cabal configure --enable-tests
 cabal build
