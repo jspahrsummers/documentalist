@@ -22,12 +22,11 @@ parseDecls = map parseDecl
 
 -- | Parses the comment of a 'Declaration'.
 parseDecl :: Declaration (Maybe Comment) -> Declaration (Maybe DocBlock)
-parseDecl x = fmap parseComment x
+parseDecl = fmap (>>= parseComment)
 
 -- | Parses a single comment.
-parseComment :: Maybe Comment -> Maybe DocBlock
-parseComment Nothing = Nothing
-parseComment (Just (Comment str)) =
+parseComment :: Comment -> Maybe DocBlock
+parseComment (Comment str) =
     let paras = splitOn "\n\n" str
 
         isResult :: String -> Bool
