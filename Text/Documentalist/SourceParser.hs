@@ -2,6 +2,9 @@
 module Text.Documentalist.SourceParser where
 
 import Text.Documentalist.Util
+import qualified Data.Foldable as F
+import qualified Data.Traversable as T
+import Control.Applicative
 
 -- | An identifier, as it would be written in the source language.
 newtype Identifier = Identifier String
@@ -27,8 +30,8 @@ type ResultTypes = [Type]
 type UnderlyingType = Maybe Type
 
 -- | Any kind of documentable declaration, associated with data of type @t@.
-data Declaration t = DecNode t Identifier DecFNode [Declaration t]
-                   | DecLeaf t Identifier DecFLeaf
+data Declaration t = DecLeaf t Identifier DecFLeaf
+                   | DecNode t Identifier DecFNode [Declaration t]
                      deriving (Eq, Show)
 
 data DecFNode = Class           SuperTypes     -- ^ A class declaration.
@@ -47,8 +50,16 @@ data DecFLeaf = Property        UnderlyingType -- ^ A property declaration in a 
                 deriving (Eq, Show)
 
 instance Functor Declaration where
-    fmap f (DecNode t i d xs) = (DecNode (f t) i d (map (fmap f) xs))
-    fmap f (DecLeaf t i d)    = (DecLeaf (f t) i d)
+    fmap f (DecLeaf t i d)    = DecLeaf (f t) i d
+    fmap f (DecNode t i d xs) = DecNode (f t) i d (map (fmap f) xs)
+
+instance F.Foldable Declaration where
+    foldr f z (DecLeaf t i d)    = f t z
+    foldr f z (DecNode t i d xs) = Prelude.foldr (flip (F.foldr f)) (f t z) xs
+
+instance T.Traversable Declaration where
+    traverse f (DecLeaf t i d)    = DecLeaf <$> f t <*> pure i <*> pure d
+    traverse f (DecNode t i d xs) = DecNode <$> f t <*> pure i <*> pure d <*> T.traverse (T.traverse f) xs
 
 -- | The meaningful body of a comment in the source language.
 --
@@ -71,6 +82,15 @@ instance Eq t => Ord (Module t) where
 instance Show t => Show (Module t) where
     show (Module n decls) = "Module \"" ++ n ++ "\": " ++ showFormattedList decls
 
+instance Functor Module where
+    fmap f (Module s xs) = Module s $ map (fmap f) xs
+
+instance F.Foldable Module where
+    foldr f z (Module s xs) = Prelude.foldr (flip (F.foldr f)) z xs
+
+instance T.Traversable Module where
+    traverse f (Module s xs) = Module <$> pure s <*> T.traverse (T.traverse f) xs
+
 -- | A package to treat as a single unit for the purposes of documentation generation.
 data Package t = Package String [Module t]
     deriving Eq
@@ -80,6 +100,15 @@ instance Eq t => Ord (Package t) where
 
 instance Show t => Show (Package t) where
     show (Package n mods) = "Package \"" ++ n ++ "\": " ++ showFormattedList mods
+
+instance Functor Package where
+    fmap f (Package s ms) = Package s $ map (fmap f) ms
+
+instance F.Foldable Package where
+    foldr f z (Package s ms) = Prelude.foldr (flip (F.foldr f)) z ms
+
+instance T.Traversable Package where
+    traverse f (Package s ms) = Package <$> pure s <*> T.traverse (T.traverse f) ms
 
 -- | Represents a unparsed package in a source language.
 class SourcePackage p where
