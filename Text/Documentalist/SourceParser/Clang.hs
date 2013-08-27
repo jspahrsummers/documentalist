@@ -84,13 +84,13 @@ parseDecl c
         Just $ DecNode comment (Identifier $ getCursorSpelling c) (Enumeration Nothing) decls
 
     | k == objcPropertyDecl =
-        Just $ DecLeaf comment (Identifier $ getCursorSpelling c) (Property Nothing)
+        Just $ DecLeaf comment (Identifier $ getCursorSpelling c) (Property $ Just declType)
 
     | k == enumConstantDecl || k == varDecl =
-        Just $ DecLeaf comment (Identifier $ getCursorSpelling c) (Constant Nothing)
+        Just $ DecLeaf comment (Identifier $ getCursorSpelling c) (Constant $ Just declType)
 
     | k == parmDecl =
-        Just $ DecLeaf comment (Identifier $ getCursorSpelling c) (Parameter Nothing)
+        Just $ DecLeaf comment (Identifier $ getCursorSpelling c) (Parameter $ Just declType)
 
     | k == typedefDecl =
         Just $ DecLeaf comment (Identifier $ getCursorSpelling c) (TypeAlias (Type "foobar"))
@@ -98,8 +98,10 @@ parseDecl c
     | otherwise = Nothing
     where k = cursorKind c
           comment = strippedComment c
+
           decls = mapMaybe parseDecl $ descendantDecls c
           super t = map getCursorSpelling $ childrenOfKind c t
+          declType = Type $ getCursorType c
 
 -- | Creates a Clang 'SourceFile' from a file on disk.
 newSourceFile :: FilePath -> SourceFile

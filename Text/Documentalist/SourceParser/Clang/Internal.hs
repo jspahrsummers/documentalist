@@ -11,6 +11,7 @@ module Text.Documentalist.SourceParser.Clang.Internal ( Index
                                                       , getCursorSpelling
                                                       , visitDescendants
                                                       , childrenOfKind
+                                                      , getCursorType
                                                       ) where
 
 import Control.Applicative
@@ -150,3 +151,13 @@ cursorKind (Cursor _ cursorPtr) =
 childrenOfKind :: Cursor -> CursorKind -> [Cursor]
 childrenOfKind cursor kind =
     visitDescendants cursor $ \child -> (cursorKind child == kind, continue)
+
+-- | Gets the spelling of a cursor's type.
+getCursorType :: Cursor -> String
+getCursorType (Cursor _ ptr) =
+    unsafePerformIO $ withForeignPtr ptr $ \cxCursor -> do
+        t <- FFI.getCursorType cxCursor
+        sp <- FFI.getTypeSpelling t
+        FFI.free t
+
+        wrapCString sp
