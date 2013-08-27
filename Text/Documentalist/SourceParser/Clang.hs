@@ -60,16 +60,16 @@ descendantDecls c =
 parseDecl :: Cursor -> Maybe (Declaration (Maybe Comment))
 parseDecl c
     | k == objcInterfaceDecl =
-        Just $ DecNode comment (Identifier $ getCursorSpelling c) (Class $ map Type $ super objcSuperclassRef) decls
+        Just $ DecNode comment (Identifier $ getCursorSpelling c) (Class $ super objcSuperclassRef) decls
 
     | k == objcProtocolDecl =
-        Just $ DecNode comment (Identifier $ getCursorSpelling c) (Interface $ map Type $ super objcProtocolRef) decls
+        Just $ DecNode comment (Identifier $ getCursorSpelling c) (Interface $ super objcProtocolRef) decls
 
     | k == objcCategoryDecl =
         let types = super objcClassRef
         in if null types
             then Nothing
-            else Just $ DecNode comment (Identifier $ getCursorSpelling c) (Mixin $ Type $ head types) decls
+            else Just $ DecNode comment (Identifier $ getCursorSpelling c) (Mixin $ head types) decls
 
     | k == objcInstanceMethodDecl =
         Just $ DecNode comment (Identifier $ '-' : getCursorSpelling c) (InstanceMethod results) decls
@@ -100,7 +100,7 @@ parseDecl c
           comment = strippedComment c
 
           decls = mapMaybe parseDecl $ descendantDecls c
-          super t = map getCursorSpelling $ childrenOfKind c t
+          super t = map (Type . getCursorSpelling) $ childrenOfKind c t
           declType = Type $ getCursorType c
           underType = fmap Type $ getUnderlyingType c
           results = [Type $ getCursorResultType c]
