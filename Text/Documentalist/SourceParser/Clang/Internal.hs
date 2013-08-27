@@ -13,6 +13,7 @@ module Text.Documentalist.SourceParser.Clang.Internal ( Index
                                                       , childrenOfKind
                                                       , getCursorType
                                                       , getCursorResultType
+                                                      , getUnderlyingType
                                                       ) where
 
 import Control.Applicative
@@ -170,3 +171,15 @@ getCursorType cursor = getTypeSpelling cursor FFI.getCursorType
 -- | Gets the spelling of a cursor's result type.
 getCursorResultType :: Cursor -> String
 getCursorResultType cursor = getTypeSpelling cursor FFI.getCursorResultType
+
+-- | Gets the underlying type for a typedef or enum.
+getUnderlyingType :: Cursor -> Maybe String
+getUnderlyingType cursor
+    | k == typedefDecl =
+        Just $ getTypeSpelling cursor FFI.getTypedefDeclUnderlyingType
+
+    | k == enumDecl =
+        Just $ getTypeSpelling cursor FFI.getEnumDeclIntegerType
+
+    | otherwise = Nothing
+    where k = cursorKind cursor

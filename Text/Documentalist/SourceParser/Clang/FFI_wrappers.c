@@ -72,6 +72,14 @@ CXType *doc_getCursorResultType(const CXCursor *cursor) {
 	return doc_dupValue(clang_getCursorResultType(*cursor));
 }
 
+CXType *doc_getTypedefDeclUnderlyingType(const CXCursor *cursor) {
+	return doc_dupValue(clang_getTypedefDeclUnderlyingType(*cursor));
+}
+
+CXType *doc_getEnumDeclIntegerType(const CXCursor *cursor) {
+	return doc_dupValue(clang_getEnumDeclIntegerType(*cursor));
+}
+
 char *doc_getTypeSpelling(const CXType *type) {
 	return doc_fromCXString(clang_getTypeSpelling(*type));
 }
