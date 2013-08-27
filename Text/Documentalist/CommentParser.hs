@@ -26,11 +26,11 @@ instance Show DocBlock where
             show' :: Writer [String] ()
             show' = do
                 tell ["# Summary: " ++ show (summary doc)]
-                when (length desc > 0) $ tell ["# Description:\n" ++ show desc ++ "\n"]
-                when (length params > 0) $ tell ["# Parameters:\n" ++ show params ++ "\n"]
+                unless (null desc) $ tell ["# Description:\n" ++ show desc ++ "\n"]
+                unless (null params) $ tell ["# Parameters:\n" ++ show params ++ "\n"]
                 when (isJust ex) $ tell ["# Example:\n" ++ show (fromJust ex) ++ "\n"]
                 when (isJust res) $ tell ["# Result: " ++ show (fromJust res)]
-        in "\n" ++ intercalate "\n" (execWriter show')
+        in '\n' : intercalate "\n" (execWriter show')
 
 -- | A newline-delimited section of text.
 data Paragraph = TextParagraph [Span]
@@ -41,7 +41,7 @@ data Paragraph = TextParagraph [Span]
 instance Show Paragraph where
     show (TextParagraph spans) = show spans
     show (CodeBlock (Code str)) = "```\n" ++ str ++ "\n```"
-    show (QuotedText para) = init $ unlines $ map ((++) "> ") $ lines $ show para
+    show (QuotedText para) = init $ unlines $ map ("> " ++) $ lines $ show para
     showList paras = (++) $ intercalate "\n\n" $ map show paras
 
 -- | Represents a portion of text in a documentation string.
@@ -64,7 +64,7 @@ instance Show Span where
     show (EmphasizedText span) = "_" ++ show span ++ "_"
     show (StrongText span) = "*" ++ show span ++ "*"
     show (UnderlinedText span) = "_" ++ show span ++ "_"
-    showList spans = (++) $ intercalate " " $ map show spans
+    showList spans = (++) $ unwords $ map show spans
 
 -- | A block or span of code in the source language.
 newtype Code = Code String

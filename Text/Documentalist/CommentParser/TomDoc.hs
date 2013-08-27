@@ -42,7 +42,7 @@ parseComment (Comment str) =
         extract :: (String -> Bool) -> [String] -> (Maybe String, [String])
         extract _ [] = (Nothing, [])
         extract f xs =
-            let (pref, rem) = span (not . f) xs
+            let (pref, rem) = break f xs
             in if null rem
                 then (Nothing, xs)
                 else (Just $ head rem, pref ++ tail rem)
