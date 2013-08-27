@@ -11,6 +11,9 @@ module Text.Documentalist.SourceParser.Clang.Internal ( Index
                                                       , getCursorSpelling
                                                       , visitDescendants
                                                       , childrenOfKind
+                                                      , getCursorType
+                                                      , getCursorResultType
+                                                      , getUnderlyingType
                                                       ) where
 
 import Control.Applicative
@@ -150,3 +153,33 @@ cursorKind (Cursor _ cursorPtr) =
 childrenOfKind :: Cursor -> CursorKind -> [Cursor]
 childrenOfKind cursor kind =
     visitDescendants cursor $ \child -> (cursorKind child == kind, continue)
+
+-- | Applies a function to get a cursor's type, then obtains its spelling.
+getTypeSpelling :: Cursor -> (FFI.CXCursor -> IO FFI.CXType) -> String
+getTypeSpelling (Cursor _ ptr) f =
+    unsafePerformIO $ withForeignPtr ptr $ \cxCursor -> do
+        t <- f cxCursor
+        sp <- FFI.getTypeSpelling t
+        FFI.free t
+
+        wrapCString sp
+
+-- | Gets the spelling of a cursor's type.
+getCursorType :: Cursor -> String
+getCursorType cursor = getTypeSpelling cursor FFI.getCursorType
+
+-- | Gets the spelling of a cursor's result type.
+getCursorResultType :: Cursor -> String
+getCursorResultType cursor = getTypeSpelling cursor FFI.getCursorResultType
+
+-- | Gets the underlying type for a typedef or enum.
+getUnderlyingType :: Cursor -> Maybe String
+getUnderlyingType cursor
+    | k == typedefDecl =
+        Just $ getTypeSpelling cursor FFI.getTypedefDeclUnderlyingType
+
+    | k == enumDecl =
+        Just $ getTypeSpelling cursor FFI.getEnumDeclIntegerType
+
+    | otherwise = Nothing
+    where k = cursorKind cursor

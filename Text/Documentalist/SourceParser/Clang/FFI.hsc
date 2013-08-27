@@ -14,6 +14,7 @@ type CXSourceLocation = Ptr ()
 type CXSourceRange = Ptr ()
 type CXTokenSet = Ptr ()
 type CXTranslationUnit = Ptr ()
+type CXType = Ptr ()
 type CXUnsavedFile = Ptr ()
 
 -- | The type of a function that can visit a cursor's children.
@@ -70,3 +71,18 @@ foreign import ccall unsafe "FFI_wrappers.h doc_getCursorKind"
 
 foreign import ccall unsafe "FFI_wrappers.h doc_getCursorSpelling"
     getCursorSpelling :: CXCursor -> IO CString
+
+foreign import ccall unsafe "FFI_wrappers.h doc_getCursorType"
+    getCursorType :: CXCursor -> IO CXType
+
+foreign import ccall unsafe "FFI_wrappers.h doc_getCursorResultType"
+    getCursorResultType :: CXCursor -> IO CXType
+
+foreign import ccall unsafe "FFI_wrappers.h doc_getTypedefDeclUnderlyingType"
+    getTypedefDeclUnderlyingType :: CXCursor -> IO CXType
+
+foreign import ccall unsafe "FFI_wrappers.h doc_getEnumDeclIntegerType"
+    getEnumDeclIntegerType :: CXCursor -> IO CXType
+
+foreign import ccall unsafe "FFI_wrappers.h doc_getTypeSpelling"
+    getTypeSpelling :: CXType -> IO CString
