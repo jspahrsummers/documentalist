@@ -4,6 +4,7 @@ module Text.Documentalist.SourceParser.Clang ( SourceFile
                                              ) where
 
 import Data.Char
+import Data.List
 import Data.Maybe
 import Text.Documentalist.SourceParser
 import Text.Documentalist.SourceParser.Clang.Internal
@@ -30,17 +31,21 @@ walkFromCursor c =
 -- | Retrieves the comment associated with the cursor, and strips out comment markers if needed.
 strippedComment :: Cursor -> Maybe Comment
 strippedComment c =
-    let pred :: Char -> Bool
-        pred '/' = True
-        pred '*' = True
-        pred '!' = True
-        pred c = isSpace c
+    let isCommentMarker :: Char -> Bool
+        isCommentMarker '/' = True
+        isCommentMarker '*' = True
+        isCommentMarker '!' = True
+        isCommentMarker _ = False
 
-        stripLines :: [String] -> [String]
-        stripLines = map $ dropWhile pred
+        stripLine :: String -> String
+        stripLine str =
+            let str' = dropWhile isSpace str
+            in if "/*" `isPrefixOf` str' || "//" `isPrefixOf` str' || "*" `isPrefixOf` str'
+                then dropWhile isSpace $ dropWhile isCommentMarker $ drop 2 str'
+                else str'
 
         transform :: String -> Comment
-        transform = Comment . init . unlines . stripLines . lines
+        transform = Comment . init . unlines . map stripLine . lines
     in fmap transform $ getComment c
 
 -- | Finds all declaration cursors descendant from the given cursor.
