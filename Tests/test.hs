@@ -1,11 +1,12 @@
 import Data.Monoid
+import Data.Traversable
+import Prelude hiding (mapM)
 import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit
 import Text.Documentalist
 import Text.Documentalist.CommentParser.TomDoc
 import Text.Documentalist.SourceParser.Clang
-import qualified Data.Traversable as T
 
 main :: IO ()
 main = do
@@ -18,7 +19,7 @@ main = do
 
     let (Right c_test) = parseDocs TomDocParser p_test
         (Right c_rac)  = parseDocs TomDocParser p_rac
-    T.mapM (putStrLn . show) c_rac
+    mapM (putStrLn . show) c_rac
 
     defaultMainWithOpts
       [ testCase "test_num" (testNum p_test)
