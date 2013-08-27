@@ -30,14 +30,17 @@ parseComment (Comment str) =
     let paras = splitOn "\n\n" str
 
         isResult :: String -> Bool
-        isResult [] = False
-        isResult str = "Returns" `isPrefixOf` str
+        isResult = ("Returns" `isPrefixOf`)
 
         isParams :: String -> Bool
-        isParams str
-            | not (null lns) = "- " `isInfixOf` head lns
-            | otherwise = False
-            where lns = lines str
+        isParams = any ("- " `isInfixOf`) . take 1 . lines
+
+        isExampleHeading :: String -> Bool
+        isExampleHeading "Example" = True
+        isExampleHeading "Example:" = True
+        isExampleHeading "Examples" = True
+        isExampleHeading "Examples:" = True
+        isExampleHeading _ = False
 
         extract :: (String -> Bool) -> [String] -> (Maybe String, [String])
         extract _ [] = (Nothing, [])
@@ -51,10 +54,11 @@ parseComment (Comment str) =
         parseComment' =
             let (res, paras') = extract isResult paras
                 (_, paras'') = extract isParams paras'
-            in DocBlock { summary = parseParagraph $ head $ paras'' ++ [""]
-                        , description = map parseParagraph $ filter (not . null) $ tail $ paras'' ++ [""]
+                (body, examples) = break isExampleHeading paras''
+            in DocBlock { summary = parseParagraph $ head $ body ++ [""]
+                        , description = map parseParagraph $ filter (not . null) $ drop 1 body
                         , parameters = []
-                        , example = Nothing
+                        , example = if null examples then Nothing else Just $ Code $ intercalate "\n\n" $ drop 1 examples
                         , result = fmap (Result . parseSpans) res
                         }
     in if null paras || null (head paras)
