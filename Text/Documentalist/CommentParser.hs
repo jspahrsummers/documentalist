@@ -72,7 +72,10 @@ newtype Code = Code String
 
 -- | One of the parameters to a Function, or one of the values in an Enumeration.
 data DocParam = DocParam (Declaration ()) [Span]
-    deriving (Eq, Show)
+    deriving Eq
+
+instance Show DocParam where
+    show (DocParam _ spans) = show spans
 
 -- | Describes the value that a Function returns to its caller.
 newtype Result = Result [Span]
