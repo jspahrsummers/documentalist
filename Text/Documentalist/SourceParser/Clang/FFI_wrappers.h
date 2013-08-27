@@ -18,6 +18,7 @@ CXCursor *doc_dupCursor(const CXCursor *cursor);
 char *doc_getCursorSpelling(const CXCursor *cursor);
 
 CXType *doc_getCursorType(const CXCursor *cursor);
+CXType *doc_getCursorResultType(const CXCursor *cursor);
 char *doc_getTypeSpelling(const CXType *type);
 
 typedef enum CXChildVisitResult (*doc_CXCursorVisitor)(const CXCursor *cursor, const CXCursor *parent);

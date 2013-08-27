@@ -72,13 +72,13 @@ parseDecl c
             else Just $ DecNode comment (Identifier $ getCursorSpelling c) (Mixin $ Type $ head types) decls
 
     | k == objcInstanceMethodDecl =
-        Just $ DecNode comment (Identifier $ '-' : getCursorSpelling c) (InstanceMethod []) decls
+        Just $ DecNode comment (Identifier $ '-' : getCursorSpelling c) (InstanceMethod results) decls
 
     | k == objcClassMethodDecl =
-        Just $ DecNode comment (Identifier $ '+' : getCursorSpelling c) (ClassMethod []) decls
+        Just $ DecNode comment (Identifier $ '+' : getCursorSpelling c) (ClassMethod results) decls
 
     | k == functionDecl =
-        Just $ DecNode comment (Identifier $ getCursorSpelling c) (Function []) decls
+        Just $ DecNode comment (Identifier $ getCursorSpelling c) (Function results) decls
 
     | k == enumDecl =
         Just $ DecNode comment (Identifier $ getCursorSpelling c) (Enumeration Nothing) decls
@@ -102,6 +102,7 @@ parseDecl c
           decls = mapMaybe parseDecl $ descendantDecls c
           super t = map getCursorSpelling $ childrenOfKind c t
           declType = Type $ getCursorType c
+          results = [Type $ getCursorResultType c]
 
 -- | Creates a Clang 'SourceFile' from a file on disk.
 newSourceFile :: FilePath -> SourceFile

@@ -68,6 +68,10 @@ CXType *doc_getCursorType(const CXCursor *cursor) {
 	return doc_dupValue(clang_getCursorType(*cursor));
 }
 
+CXType *doc_getCursorResultType(const CXCursor *cursor) {
+	return doc_dupValue(clang_getCursorResultType(*cursor));
+}
+
 char *doc_getTypeSpelling(const CXType *type) {
 	return doc_fromCXString(clang_getTypeSpelling(*type));
 }
