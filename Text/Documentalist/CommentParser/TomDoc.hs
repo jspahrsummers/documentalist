@@ -22,17 +22,11 @@ parseDecls = map parseDecl
 
 -- | Parses the comment of a 'Declaration'.
 parseDecl :: Declaration (Maybe Comment) -> Declaration (Maybe DocBlock)
-parseDecl (Class c i st decls) = Class (parseComment c) i st $ parseDecls decls
-parseDecl (Mixin c i t decls) = Mixin (parseComment c) i t $ parseDecls decls
-parseDecl (InstanceMethod c i rt decls) = InstanceMethod (parseComment c) i rt $ parseDecls decls
-parseDecl (ClassMethod c i rt decls) = ClassMethod (parseComment c) i rt $ parseDecls decls
-parseDecl (Property c i t) = Property (parseComment c) i t
-parseDecl _ = undefined
+parseDecl = fmap (>>= parseComment)
 
 -- | Parses a single comment.
-parseComment :: Maybe Comment -> Maybe DocBlock
-parseComment Nothing = Nothing
-parseComment (Just (Comment str)) =
+parseComment :: Comment -> Maybe DocBlock
+parseComment (Comment str) =
     let paras = splitOn "\n\n" str
 
         isResult :: String -> Bool

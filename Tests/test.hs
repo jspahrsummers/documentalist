@@ -1,4 +1,6 @@
 import Data.Monoid
+import Data.Traversable
+import Prelude hiding (mapM)
 import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit
@@ -9,21 +11,23 @@ import Text.Documentalist.SourceParser.Clang
 main :: IO ()
 main = do
     let f_test = newSourceFile "Tests/Fixtures/test_header.h"
-    let f_rac = newSourceFile "Tests/Fixtures/RACSignal.h"
+    let f_rac  = newSourceFile "Tests/Fixtures/RACSignal.h"
 
-    p_test <- parse f_test
-    p_rac <- parse f_rac
+    p_test <- parse f_test 
+    p_rac  <- parse f_rac
     print p_rac
 
-    let c_test = parseDocs TomDocParser p_test
-        c_rac = parseDocs TomDocParser p_rac
-    print c_rac
+    let (Right c_test) = parseDocs TomDocParser p_test
+        (Right c_rac)  = parseDocs TomDocParser p_rac
+    mapM (putStrLn . show) c_rac
 
     defaultMainWithOpts
       [ testCase "test_num" (testNum p_test)
       , testCase "rac_num" (racNum p_rac)
       ] mempty
 
+
+testNum :: (Package (Maybe Comment)) -> Assertion
 testNum (Package p modules) = length modules @?= 1
 
 -- TODO: work out right numbers
