@@ -55,25 +55,25 @@ descendantDecls c =
 parseDecl :: Cursor -> Maybe (Declaration (Maybe Comment))
 parseDecl c
     | k == typedefDecl =
-        Just $ TypeAlias comment (Identifier $ getCursorSpelling c) (Type "foobar")
+        Just $ DecLeaf comment (Identifier $ getCursorSpelling c) (TypeAlias (Type "foobar"))
 
     | k == objcInterfaceDecl =
         let super = map getCursorSpelling $ childrenOfKind c objcSuperclassRef
             decls = mapMaybe parseDecl $ descendantDecls c
-        in Just $ Class comment (Identifier $ getCursorSpelling c) (map Type super) decls
+        in Just $ DecNode comment (Identifier $ getCursorSpelling c) (Class (map Type super)) decls
 
     | k == objcCategoryDecl =
         let decls = mapMaybe parseDecl $ descendantDecls c
-        in Just $ Mixin comment (Identifier $ getCursorSpelling c) (Type "") decls
+        in Just $ DecNode comment (Identifier $ getCursorSpelling c) (Mixin (Type "")) decls
 
     | k == objcPropertyDecl =
-        Just $ Property comment (Identifier $ getCursorSpelling c) Nothing
+        Just $ DecLeaf comment (Identifier $ getCursorSpelling c) (Property Nothing)
 
     | k == objcInstanceMethodDecl =
-        Just $ InstanceMethod comment (Identifier $ '-' : getCursorSpelling c) [] []
+        Just $ DecNode comment (Identifier $ '-' : getCursorSpelling c) (InstanceMethod []) []
 
     | k == objcClassMethodDecl =
-        Just $ ClassMethod comment (Identifier $ '+' : getCursorSpelling c) [] []
+        Just $ DecNode comment (Identifier $ '+' : getCursorSpelling c) (ClassMethod []) []
 
     | otherwise = Nothing
     where k = cursorKind c

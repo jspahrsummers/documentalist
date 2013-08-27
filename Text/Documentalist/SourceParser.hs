@@ -1,7 +1,9 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 module Text.Documentalist.SourceParser where
 
 import Text.Documentalist.Util
+import Data.Foldable
+import Data.Traversable
 
 -- | An identifier, as it would be written in the source language.
 newtype Identifier = Identifier String
@@ -27,18 +29,26 @@ type ResultTypes = [Type]
 type UnderlyingType = Maybe Type
 
 -- | Any kind of documentable declaration, associated with data of type @t@.
-data Declaration t = Class t Identifier SuperTypes [Declaration t]              -- ^ A class declaration.
-                   | Interface t Identifier SuperTypes [Declaration t]          -- ^ An abstract interface, or Objective-C protocol definition.
-                   | Mixin t Identifier Type [Declaration t]                    -- ^ A mixin, or Objective-C category declaration.
-                   | Property t Identifier UnderlyingType                       -- ^ A property declaration in a class.
-                   | Enumeration t Identifier UnderlyingType [Declaration t]    -- ^ An enumeration.
-                   | Constant t Identifier UnderlyingType                       -- ^ A constant within an enumeration or class, or outside of any scope.
-                   | Function t Identifier ResultTypes [Declaration t]          -- ^ A function.
-                   | ClassMethod t Identifier ResultTypes [Declaration t]       -- ^ A class method or static member function.
-                   | InstanceMethod t Identifier ResultTypes [Declaration t]    -- ^ An instance method or member function.
-                   | Parameter t Identifier UnderlyingType                      -- ^ The parameter to a function or method.
-                   | TypeAlias t Identifier Type                                -- ^ A redeclaration of a type under a different name.
-                   deriving (Eq, Show)
+data Declaration t = DecLeaf t Identifier DecFLeaf
+                   | DecNode t Identifier DecFNode [Declaration t]
+                   deriving (Eq, Show, Functor, Foldable, Traversable)
+
+-- | A declaration family type for a declaration that may contain more declarations inside of it
+data DecFNode = Class           SuperTypes     -- ^ A class declaration.
+              | Interface       SuperTypes     -- ^ An abstract interface, or Objective-C protocol definition.
+              | Mixin           Type           -- ^ A mixin, or Objective-C category declaration.
+              | Enumeration     UnderlyingType -- ^ An enumeration.                   
+              | Function        ResultTypes    -- ^ A function.
+              | ClassMethod     ResultTypes    -- ^ A class method or static member function.
+              | InstanceMethod  ResultTypes    -- ^ An instance method or member function.
+              deriving (Eq, Show)
+
+-- | A declaration family type that can not carry any additional declarations
+data DecFLeaf = Property        UnderlyingType -- ^ A property declaration in a class.
+              | Constant        UnderlyingType -- ^ A constant within an enumeration or class, or outside of any scope.
+              | Parameter       UnderlyingType -- ^ The parameter to a function or method.
+              | TypeAlias       Type           -- ^ A redeclaration of a type under a different name.
+              deriving (Eq, Show)
 
 -- | The meaningful body of a comment in the source language.
 --
@@ -53,7 +63,7 @@ instance Show Comment where
 --
 --   The declaration list should contain any top-level declarations in order of appearance.
 data Module t = Module String [Declaration t]
-    deriving Eq
+    deriving (Eq, Functor, Foldable, Traversable)
 
 instance Eq t => Ord (Module t) where
     compare (Module a _) (Module b _) = compare a b
@@ -63,7 +73,7 @@ instance Show t => Show (Module t) where
 
 -- | A package to treat as a single unit for the purposes of documentation generation.
 data Package t = Package String [Module t]
-    deriving Eq
+    deriving (Eq, Functor, Foldable, Traversable)
 
 instance Eq t => Ord (Package t) where
     compare (Package a _) (Package b _) = compare a b
