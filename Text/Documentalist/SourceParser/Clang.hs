@@ -41,7 +41,7 @@ strippedComment c =
         stripLine str =
             let str' = dropWhile isSpace str
             in if "/*" `isPrefixOf` str' || "//" `isPrefixOf` str' || "*" `isPrefixOf` str'
-                then dropWhile isSpace $ dropWhile isCommentMarker $ drop 2 str'
+                then dropWhile isSpace $ dropWhile isCommentMarker str'
                 else str'
 
         transform :: String -> Comment
