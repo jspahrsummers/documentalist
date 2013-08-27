@@ -59,20 +59,17 @@ descendantDecls c =
 -- | Attempts to parse the declaration at a cursor.
 parseDecl :: Cursor -> Maybe (Declaration (Maybe Comment))
 parseDecl c
-    | k == typedefDecl =
-        Just $ DecLeaf comment (Identifier $ getCursorSpelling c) (TypeAlias (Type "foobar"))
-
     | k == objcInterfaceDecl =
-        let super = map getCursorSpelling $ childrenOfKind c objcSuperclassRef
-            decls = mapMaybe parseDecl $ descendantDecls c
-        in Just $ DecNode comment (Identifier $ getCursorSpelling c) (Class (map Type super)) decls
+        Just $ DecNode comment (Identifier $ getCursorSpelling c) (Class $ map Type $ super objcSuperclassRef) decls
+
+    | k == objcProtocolDecl =
+        Just $ DecNode comment (Identifier $ getCursorSpelling c) (Interface $ map Type $ super objcProtocolRef) decls
 
     | k == objcCategoryDecl =
-        let decls = mapMaybe parseDecl $ descendantDecls c
-        in Just $ DecNode comment (Identifier $ getCursorSpelling c) (Mixin (Type "")) decls
-
-    | k == objcPropertyDecl =
-        Just $ DecLeaf comment (Identifier $ getCursorSpelling c) (Property Nothing)
+        let types = super objcClassRef
+        in if null types
+            then Nothing
+            else Just $ DecNode comment (Identifier $ getCursorSpelling c) (Mixin $ Type $ head types) decls
 
     | k == objcInstanceMethodDecl =
         Just $ DecNode comment (Identifier $ '-' : getCursorSpelling c) (InstanceMethod []) []
@@ -80,9 +77,29 @@ parseDecl c
     | k == objcClassMethodDecl =
         Just $ DecNode comment (Identifier $ '+' : getCursorSpelling c) (ClassMethod []) []
 
+    | k == functionDecl =
+        Just $ DecNode comment (Identifier $ getCursorSpelling c) (Function []) []
+
+    | k == enumDecl =
+        Just $ DecNode comment (Identifier $ getCursorSpelling c) (Enumeration Nothing) decls
+
+    | k == objcPropertyDecl =
+        Just $ DecLeaf comment (Identifier $ getCursorSpelling c) (Property Nothing)
+
+    | k == enumConstantDecl || k == varDecl =
+        Just $ DecLeaf comment (Identifier $ getCursorSpelling c) (Constant Nothing)
+
+    | k == parmDecl =
+        Just $ DecLeaf comment (Identifier $ getCursorSpelling c) (Parameter Nothing)
+
+    | k == typedefDecl =
+        Just $ DecLeaf comment (Identifier $ getCursorSpelling c) (TypeAlias (Type "foobar"))
+
     | otherwise = Nothing
     where k = cursorKind c
           comment = strippedComment c
+          decls = mapMaybe parseDecl $ descendantDecls c
+          super t = map getCursorSpelling $ childrenOfKind c t
 
 -- | Creates a Clang 'SourceFile' from a file on disk.
 newSourceFile :: FilePath -> SourceFile
