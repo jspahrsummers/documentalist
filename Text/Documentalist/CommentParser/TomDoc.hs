@@ -80,7 +80,7 @@ parseParams decl str =
         groupParams (x : xs) =
             -- Group the lines associated with each parameter.
             let (ext, rem) = break isParam xs
-                result = init $ unlines (x : ext)
+                result = unwords (x : ext)
             in result : groupParams rem
     in map (parseParam decl) (groupParams $ lines str)
 
