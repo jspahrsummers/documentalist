@@ -36,6 +36,11 @@ unsigned doc_isDeclaration(const CXCursor *cursor) {
 	return clang_isDeclaration(clang_getCursorKind(*cursor));
 }
 
+unsigned doc_isCanonical(const CXCursor *cursor) {
+  CXCursor c = clang_getCanonicalCursor(*cursor);
+  return clang_equalCursors(c, *cursor);
+}
+
 enum CXCursorKind doc_getCursorKind(const CXCursor *cursor) {
 	return clang_getCursorKind(*cursor);
 }

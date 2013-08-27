@@ -59,6 +59,7 @@ descendantDecls c =
 -- | Attempts to parse the declaration at a cursor.
 parseDecl :: Cursor -> Maybe (Declaration (Maybe Comment))
 parseDecl c
+    | not (isCanonical c) = Nothing
     | k == objcInterfaceDecl =
         Just $ DecNode comment (Identifier $ getCursorSpelling c) (Class $ super objcSuperclassRef ++ super objcProtocolRef) decls
 

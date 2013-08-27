@@ -51,6 +51,9 @@ foreign import ccall unsafe "FFI_wrappers.h doc_getTranslationUnitCursor"
 foreign import ccall unsafe "FFI_wrappers.h doc_isDeclaration"
     isDeclaration :: CXCursor -> CUInt
 
+foreign import ccall unsafe "FFI_wrappers.h doc_isCanonical"
+    isCanonical :: CXCursor -> CUInt
+
 foreign import ccall unsafe "free"
     free :: Ptr () -> IO ()
 

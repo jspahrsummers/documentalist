@@ -7,6 +7,7 @@ module Text.Documentalist.SourceParser.Clang.Internal ( Index
                                                       , getCursor
                                                       , getComment
                                                       , isDeclaration
+                                                      , isCanonical
                                                       , cursorKind
                                                       , getCursorSpelling
                                                       , visitDescendants
@@ -143,6 +144,13 @@ isDeclaration :: Cursor -> Bool
 isDeclaration (Cursor _ cursorPtr) =
     unsafePerformIO $ withForeignPtr cursorPtr $ \cxCursor -> 
         return $ FFI.isDeclaration cxCursor /= 0
+
+-- | Returns if a cursor is the canonical definition of a cursor.
+
+isCanonical :: Cursor -> Bool
+isCanonical (Cursor _ cursorPtr) =
+    unsafePerformIO $ withForeignPtr cursorPtr $ \cxCursor ->
+        return $ FFI.isCanonical cxCursor == 0
 
 -- | Returns the kind of the specified cursor.
 cursorKind :: Cursor -> CursorKind

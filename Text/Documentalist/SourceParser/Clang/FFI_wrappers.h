@@ -13,6 +13,7 @@
 CXCursor *doc_getTranslationUnitCursor(CXTranslationUnit unit);
 char *doc_Cursor_getRawCommentText(const CXCursor *cursor);
 unsigned doc_isDeclaration(const CXCursor *cursor);
+unsigned doc_isCanonical(const CXCursor *cursor);
 enum CXCursorKind doc_getCursorKind(const CXCursor *cursor);
 CXCursor *doc_dupCursor(const CXCursor *cursor);
 char *doc_getCursorSpelling(const CXCursor *cursor);
