@@ -60,7 +60,7 @@ descendantDecls c =
 parseDecl :: Cursor -> Maybe (Declaration (Maybe Comment))
 parseDecl c
     | k == objcInterfaceDecl =
-        Just $ DecNode comment (Identifier $ getCursorSpelling c) (Class $ super objcSuperclassRef) decls
+        Just $ DecNode comment (Identifier $ getCursorSpelling c) (Class $ super objcSuperclassRef ++ super objcProtocolRef) decls
 
     | k == objcProtocolDecl =
         Just $ DecNode comment (Identifier $ getCursorSpelling c) (Interface $ super objcProtocolRef) decls
