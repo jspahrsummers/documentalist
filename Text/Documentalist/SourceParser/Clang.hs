@@ -72,13 +72,13 @@ parseDecl c
             else Just $ DecNode comment (Identifier $ getCursorSpelling c) (Mixin $ Type $ head types) decls
 
     | k == objcInstanceMethodDecl =
-        Just $ DecNode comment (Identifier $ '-' : getCursorSpelling c) (InstanceMethod []) []
+        Just $ DecNode comment (Identifier $ '-' : getCursorSpelling c) (InstanceMethod []) decls
 
     | k == objcClassMethodDecl =
-        Just $ DecNode comment (Identifier $ '+' : getCursorSpelling c) (ClassMethod []) []
+        Just $ DecNode comment (Identifier $ '+' : getCursorSpelling c) (ClassMethod []) decls
 
     | k == functionDecl =
-        Just $ DecNode comment (Identifier $ getCursorSpelling c) (Function []) []
+        Just $ DecNode comment (Identifier $ getCursorSpelling c) (Function []) decls
 
     | k == enumDecl =
         Just $ DecNode comment (Identifier $ getCursorSpelling c) (Enumeration Nothing) decls
