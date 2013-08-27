@@ -1,9 +1,9 @@
-{-# LANGUAGE ScopedTypeVariables, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
+{-# LANGUAGE ScopedTypeVariables, DeriveFunctor, DeriveFoldable, DeriveTraversable, KindSignatures #-}
 module Text.Documentalist.SourceParser where
 
 import Text.Documentalist.Util
-import Data.Foldable
-import Data.Traversable
+import qualified Data.Foldable as F
+import qualified Data.Traversable as T
 
 -- | An identifier, as it would be written in the source language.
 newtype Identifier = Identifier String
@@ -31,7 +31,7 @@ type UnderlyingType = Maybe Type
 -- | Any kind of documentable declaration, associated with data of type @t@.
 data Declaration t = DecLeaf t Identifier DecFLeaf
                    | DecNode t Identifier DecFNode [Declaration t]
-                   deriving (Eq, Show, Functor, Foldable, Traversable)
+                   deriving (Eq, Show, Functor, F.Foldable, T.Traversable)
 
 -- | A declaration family type for a declaration that may contain more declarations inside of it
 data DecFNode = Class           SuperTypes     -- ^ A class declaration.
@@ -63,7 +63,7 @@ instance Show Comment where
 --
 --   The declaration list should contain any top-level declarations in order of appearance.
 data Module t = Module String [Declaration t]
-    deriving (Eq, Functor, Foldable, Traversable)
+    deriving (Eq, Functor, F.Foldable, T.Traversable)
 
 instance Eq t => Ord (Module t) where
     compare (Module a _) (Module b _) = compare a b
@@ -73,13 +73,37 @@ instance Show t => Show (Module t) where
 
 -- | A package to treat as a single unit for the purposes of documentation generation.
 data Package t = Package String [Module t]
-    deriving (Eq, Functor, Foldable, Traversable)
+    deriving (Eq, Functor, F.Foldable, T.Traversable)
 
 instance Eq t => Ord (Package t) where
     compare (Package a _) (Package b _) = compare a b
 
 instance Show t => Show (Package t) where
     show (Package n mods) = "Package \"" ++ n ++ "\": " ++ showFormattedList mods
+
+-- Type classes are for fancy people
+packageTraverse :: forall (m :: * -> *) t. Monad m
+                         => (String -> m ())
+                         -> (String -> m ())
+                         -> (Int -> t -> Identifier -> DecFLeaf -> m ())
+                         -> (Int -> t -> Identifier -> DecFNode -> m ())
+                         -> Package t -> m ()
+packageTraverse pkgName modName declLeaf declNode (Package n ms) = pkgName n >> mapM_ (moduleTraverse modName declLeaf declNode) ms
+
+moduleTraverse :: forall (m :: * -> *) t. Monad m
+                        => (String -> m ())
+                        -> (Int -> t -> Identifier -> DecFLeaf -> m ())
+                        -> (Int -> t -> Identifier -> DecFNode -> m ())
+                        -> Module t -> m ()
+moduleTraverse modName declLeaf declNode (Module n xs) = modName n >> mapM_ (declTraverse 0 declLeaf declNode) xs
+
+declTraverse :: forall t (m :: * -> *). Monad m
+                      => Int
+                      -> (Int -> t -> Identifier -> DecFLeaf -> m ())
+                      -> (Int -> t -> Identifier -> DecFNode -> m ())
+                      -> Declaration t -> m ()
+declTraverse d declLeaf _ (DecLeaf t i e)           = declLeaf d t i e
+declTraverse d declLeaf declNode (DecNode t i e xs) = declNode d t i e >> mapM_ (declTraverse (d + 1) declLeaf declNode) xs
 
 -- | Represents a unparsed package in a source language.
 class SourcePackage p where
