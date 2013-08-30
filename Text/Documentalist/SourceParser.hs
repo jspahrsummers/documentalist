@@ -1,9 +1,10 @@
-module Text.Documentalist.SourceParser ( module Types
+module Text.Documentalist.SourceParser ( module Text.Documentalist.Types.Comment
+                                       , module Text.Documentalist.Types.Package
                                        , SourcePackage(..)
                                        ) where
 
-import Text.Documentalist.Types.Comment as Types
-import Text.Documentalist.Types.Package as Types
+import Text.Documentalist.Types.Comment
+import Text.Documentalist.Types.Package
 
 -- | Represents a unparsed package in a source language.
 class SourcePackage p where

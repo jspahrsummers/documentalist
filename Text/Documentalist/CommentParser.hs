@@ -1,12 +1,14 @@
-module Text.Documentalist.CommentParser ( module Types
+module Text.Documentalist.CommentParser ( module Text.Documentalist.Types.Comment
+                                        , module Text.Documentalist.Types.DocBlock
+                                        , module Text.Documentalist.Types.Package
                                         , CommentParseError(..)
                                         , CommentParser(..)
                                         ) where
 
 import Control.Monad.Error.Class
-import Text.Documentalist.Types.Comment as Types
-import Text.Documentalist.Types.DocBlock as Types
-import Text.Documentalist.Types.Package as Types
+import Text.Documentalist.Types.Comment
+import Text.Documentalist.Types.DocBlock
+import Text.Documentalist.Types.Package
 
 -- | An error that occurred during comment parsing.
 data CommentParseError = CommentParseError
