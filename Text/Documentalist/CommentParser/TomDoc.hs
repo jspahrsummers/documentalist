@@ -4,9 +4,7 @@ module Text.Documentalist.CommentParser.TomDoc ( TomDocParser(..)
 import Data.Functor
 import Data.List
 import Data.List.Split
-import Data.Maybe
 import Text.Documentalist.CommentParser
-import Text.Documentalist.SourceParser
 
 -- | Parses comments in tomdoc.org format.
 data TomDocParser = TomDocParser

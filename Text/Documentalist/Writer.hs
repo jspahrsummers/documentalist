@@ -1,10 +1,12 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
-module Text.Documentalist.Writer where
+module Text.Documentalist.Writer ( module Types
+                                 , Writer(..)
+                                 ) where
 
 import Control.Monad.Error.Class
 import Control.Monad.IO.Class
-import Text.Documentalist.SourceParser
-import Text.Documentalist.CommentParser
+import Text.Documentalist.Types.DocBlock as Types
+import Text.Documentalist.Types.Package as Types
 
 -- | A monad capable of generating output from 'DocBlock's.
 class (Error e, MonadIO w) => Writer e w where

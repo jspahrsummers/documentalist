@@ -21,6 +21,9 @@ library
                       Text.Documentalist.CommentParser.TomDoc
                       Text.Documentalist.SourceParser
                       Text.Documentalist.SourceParser.Clang
+                      Text.Documentalist.Types.Comment
+                      Text.Documentalist.Types.DocBlock
+                      Text.Documentalist.Types.Package
                       Text.Documentalist.Writer
   build-depends:      base >= 4.5 && < 5,
                       containers >= 0.5,
