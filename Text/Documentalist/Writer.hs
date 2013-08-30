@@ -1,14 +1,16 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
-module Text.Documentalist.Writer where
+module Text.Documentalist.Writer ( module Text.Documentalist.Types.DocBlock
+                                 , module Text.Documentalist.Types.Package
+                                 , Writer(..)
+                                 ) where
 
-import Control.Monad.Error.Class
 import Control.Monad.IO.Class
-import Text.Documentalist.SourceParser
-import Text.Documentalist.CommentParser
+import Text.Documentalist.Types.DocBlock
+import Text.Documentalist.Types.Package
 
--- | A monad capable of generating output from 'DocBlock's.
-class (Error e, MonadIO w) => Writer e w where
-    -- | Writes formatted documentation.
+-- | Generates formatted output from 'DocBlock's.
+class MonadIO w => Writer w where
+    -- | Writes formatted documentation to a destination determined by the specific 'Writer' used.
     --
-    --   The destination of the output is determined by the specific 'Writer' used.
-    write :: Package (Maybe DocBlock) -> w (Either e ())
+    --   Any errors will be indicated with a thrown 'Exception'.
+    write :: Package (Maybe DocBlock) -> w ()

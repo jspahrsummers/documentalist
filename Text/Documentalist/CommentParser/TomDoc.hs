@@ -4,9 +4,7 @@ module Text.Documentalist.CommentParser.TomDoc ( TomDocParser(..)
 import Data.Functor
 import Data.List
 import Data.List.Split
-import Data.Maybe
 import Text.Documentalist.CommentParser
-import Text.Documentalist.SourceParser
 
 -- | Parses comments in tomdoc.org format.
 data TomDocParser = TomDocParser
@@ -85,7 +83,8 @@ parseParams decl str =
     in map (parseParam decl) (groupParams $ lines str)
 
 parseParam :: Declaration t -> String -> DocParam
-parseParam decl str = DocParam (() <$ decl) (parseSpans str)
+-- TODO: Pass in a real DocBlock here.
+parseParam decl str = DocParam (Nothing <$ decl) (parseSpans str)
 
 parseSpans :: String -> [Span]
 parseSpans str = [PlainText str]

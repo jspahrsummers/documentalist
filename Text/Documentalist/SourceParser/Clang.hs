@@ -1,8 +1,9 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-module Text.Documentalist.SourceParser.Clang ( SourceFile
-                                             , newSourceFile
+module Text.Documentalist.SourceParser.Clang ( ClangParser(..)
                                              ) where
 
+import Control.Monad
+import Control.Monad.IO.Class
 import Data.Char
 import Data.List
 import Data.Maybe
@@ -11,17 +12,27 @@ import Text.Documentalist.SourceParser.Clang.Internal
 import Text.Documentalist.SourceParser.Clang.Types
 
 -- | A file in a source language supported by Clang.
-newtype SourceFile = SourceFile { filePath :: FilePath }
+newtype ClangParser p = ClangParser { runClangParser :: IO p } 
 
-instance Show SourceFile where
-    show = show . filePath
+instance Monad ClangParser where
+    return x = ClangParser $ return x
+    (ClangParser m) >>= f =
+        ClangParser $ m >>= return . f >>= runClangParser
 
-instance SourcePackage SourceFile where
-    parse src = do
-        tu <- newIndex >>= newTranslationUnit (filePath src)
+instance Functor ClangParser where
+    fmap = liftM
 
-        let mod = Module (filePath src) $ walkFromCursor $ getCursor tu
-        return $ Package "" [mod]
+instance MonadIO ClangParser where
+    liftIO = ClangParser
+
+instance SourceParser ClangParser where
+    parse path =
+        liftIO $ do
+            ind <- newIndex
+            tu <- newTranslationUnit path ind
+
+            let mod = Module path $ walkFromCursor $ getCursor tu
+            return $ Package "" [mod]
 
 -- | Traverses the AST, beginning with the given cursor.
 walkFromCursor :: Cursor -> [Declaration (Maybe Comment)]
@@ -104,7 +115,3 @@ parseDecl c
           declType = Type $ getCursorType c
           underType = fmap Type $ getUnderlyingType c
           results = [Type $ getCursorResultType c]
-
--- | Creates a Clang 'SourceFile' from a file on disk.
-newSourceFile :: FilePath -> SourceFile
-newSourceFile = SourceFile
