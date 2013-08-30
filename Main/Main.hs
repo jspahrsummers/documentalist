@@ -7,6 +7,6 @@ import Text.Documentalist.SourceParser.Clang
 
 main :: IO ()
 main = do
-    sources <- fmap newSourceFile <$> getArgs
-    docs <- mapM parse sources
+    sources <- getArgs
+    docs <- runClangParser $ mapM parse sources
     print $ map (parseDocs TomDocParser) docs
