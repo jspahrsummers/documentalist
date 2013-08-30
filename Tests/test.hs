@@ -1,6 +1,4 @@
 import Data.Monoid
-import Data.Traversable
-import Prelude hiding (mapM)
 import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit
@@ -16,13 +14,12 @@ main = do
 
     let (Right c_test) = parseDocs TomDocParser p_test
         (Right c_rac)  = parseDocs TomDocParser p_rac
-    mapM (putStrLn . show) c_rac
+    traversePackage (putStrLn . show) (putStrLn . show) (\_ -> putStrLn . show) c_rac
 
     defaultMainWithOpts
       [ testCase "test_num" (testNum p_test)
       , testCase "rac_num" (racNum p_rac)
       ] mempty
-
 
 testNum :: (Package (Maybe Comment)) -> Assertion
 testNum (Package p modules) = length modules @?= 1

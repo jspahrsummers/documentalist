@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
+{-# LANGUAGE DeriveFunctor #-}
 module Text.Documentalist.Types.Package ( Identifier(..)
                                         , Type(..)
                                         , SuperTypes
@@ -9,10 +9,9 @@ module Text.Documentalist.Types.Package ( Identifier(..)
                                         , DecFLeaf(..)
                                         , Module(..)
                                         , Package(..)
+                                        , traversePackage
                                         ) where
 
-import Data.Foldable
-import Data.Traversable
 import Text.Documentalist.Util
 
 -- | An identifier, as it would be written in the source language.
@@ -41,7 +40,7 @@ type UnderlyingType = Maybe Type
 -- | Any kind of documentable declaration, associated with data of type @t@.
 data Declaration t = DecLeaf t Identifier DecFLeaf
                    | DecNode t Identifier DecFNode [Declaration t]
-                   deriving (Eq, Show, Functor, Foldable, Traversable)
+                   deriving (Eq, Show, Functor)
 
 -- | A declaration family type for a declaration that may contain more declarations inside of it
 data DecFNode = Class           SuperTypes     -- ^ A class declaration.
@@ -64,7 +63,7 @@ data DecFLeaf = Property        UnderlyingType -- ^ A property declaration in a 
 --
 --   The declaration list should contain any top-level declarations in order of appearance.
 data Module t = Module String [Declaration t]
-    deriving (Eq, Functor, Foldable, Traversable)
+    deriving (Eq, Functor)
 
 instance Eq t => Ord (Module t) where
     compare (Module a _) (Module b _) = compare a b
@@ -74,10 +73,33 @@ instance Show t => Show (Module t) where
 
 -- | A package to treat as a single unit for the purposes of documentation generation.
 data Package t = Package String [Module t]
-    deriving (Eq, Functor, Foldable, Traversable)
+    deriving (Eq, Functor)
 
 instance Eq t => Ord (Package t) where
     compare (Package a _) (Package b _) = compare a b
 
 instance Show t => Show (Package t) where
     show (Package n mods) = "Package \"" ++ n ++ "\": " ++ showFormattedList mods
+
+-- | Traverse a package with a monad
+traversePackage :: Monad m
+                         => (String -> m ())
+                         -> (String -> m ())
+                         -> (Int -> Declaration t -> m ())
+                         -> Package t -> m ()
+traversePackage pkgName modName declFun (Package n ms) = pkgName n >> mapM_ (traverseModule modName declFun) ms
+
+-- | Traverse a module with a monad
+traverseModule :: Monad m
+                        => (String -> m ())
+                        -> (Int -> Declaration t -> m ())
+                        -> Module t -> m ()
+traverseModule modName declFun (Module n xs) = modName n >> mapM_ (traverseDeclaration 0 declFun) xs
+
+-- | Traverse a declaration with a monad
+traverseDeclaration :: Monad m
+                      => Int
+                      -> (Int -> Declaration t -> m ())
+                      -> Declaration t -> m ()
+traverseDeclaration d declFun x@(DecLeaf _ _ _)    = declFun d x
+traverseDeclaration d declFun x@(DecNode _ _ _ xs) = declFun d x >> mapM_ (traverseDeclaration (d + 1) declFun) xs
