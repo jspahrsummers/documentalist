@@ -1,26 +1,31 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 module Text.Documentalist.CommentParser ( module Text.Documentalist.Types.Comment
                                         , module Text.Documentalist.Types.DocBlock
                                         , module Text.Documentalist.Types.Package
-                                        , CommentParseError(..)
+                                        , CommentParseException(..)
                                         , CommentParser(..)
                                         ) where
 
+import Control.Exception
 import Control.Monad.Error.Class
+import Data.Typeable
 import Text.Documentalist.Types.Comment
 import Text.Documentalist.Types.DocBlock
 import Text.Documentalist.Types.Package
 
--- | An error that occurred during comment parsing.
-data CommentParseError = CommentParseError
+-- | An exception that occurred during comment parsing.
+data CommentParseException = CommentParseException
     { file :: Maybe FilePath
     , line :: Maybe Integer
     , message :: String
-    } deriving (Eq, Show)
+    } deriving (Eq, Show, Typeable)
 
-instance Error CommentParseError where
-    strMsg s = CommentParseError { file = Nothing, line = Nothing, message = s }
+instance Error CommentParseException where
+    strMsg s = CommentParseException { file = Nothing, line = Nothing, message = s }
+
+instance Exception CommentParseException
 
 -- | Parses a specific 'Comment' syntax.
 class CommentParser p where
     -- | Parses the comments in the given package into 'DocBlock's.
-    parseDocs :: p -> Package (Maybe Comment) -> Either CommentParseError (Package (Maybe DocBlock))
+    parseDocs :: p -> Package (Maybe Comment) -> Either CommentParseException (Package (Maybe DocBlock))
