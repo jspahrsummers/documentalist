@@ -14,7 +14,7 @@ The project includes both a library and executable component:
 
 ## Stages
 
-The architecture is split into three major stages.
+The architecture is split into three major stages:
 
  1. A [SourceParser](Text/Documentalist/SourceParser.hs) locates documentation
     comments and the declarations to which they're attached. Currently, there's
@@ -22,8 +22,8 @@ The architecture is split into three major stages.
     [LibClang](http://clang.llvm.org/docs/Tooling.html).
  1. A [CommentParser](Text/Documentalist/CommentParser.hs) interprets
     declarations and comment texts according to a predefined syntax, and creates
-    a language-independent AST. The only `CommentParser` currently planned will
-    interpret the [TomDoc](http://tomdoc.org) format.
+    a language-independent AST. Currently, there's only one `CommentParser`,
+    which interprets [TomDoc](http://tomdoc.org) style comments.
  1. A [Writer](Text/Documentalist/Writer.hs) generates pretty output, like the
     final result of [Doxygen](http://www.stack.nl/~dimitri/doxygen/) or
     [Appledoc](http://gentlebytes.com/appledoc/).

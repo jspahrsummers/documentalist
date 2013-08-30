@@ -2,7 +2,18 @@ name:           documentalist
 version:        0.1
 stability:      alpha
 synopsis:       A multi-language, extensible documentation generator
-description:    TODO
+description:
+  Documentalist is an extensible documentation generator that is meant to support
+  multiple source languages, documentation syntaxes, and output formats.
+  .
+  The architecture is split into three major stages:
+  .
+    1. A 'SourceParser' locates documentation comments and the declarations to which they're attached.
+    .
+    2. A 'CommentParser' interprets declarations and comment texts according to a predefined syntax, and creates a language-independent AST.
+    .
+    3. A 'Writer' generates pretty output, like the final result of Doxygen or Appledoc.
+ 
 homepage:       https://github.com/jspahrsummers/documentalist
 bug-reports:    https://github.com/jspahrsummers/documentalist/issues
 category:       Documentation
