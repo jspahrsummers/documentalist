@@ -83,7 +83,8 @@ parseParams decl str =
     in map (parseParam decl) (groupParams $ lines str)
 
 parseParam :: Declaration t -> String -> DocParam
-parseParam decl str = DocParam (() <$ decl) (parseSpans str)
+-- TODO: Pass in a real DocBlock here.
+parseParam decl str = DocParam (Nothing <$ decl) (parseSpans str)
 
 parseSpans :: String -> [Span]
 parseSpans str = [PlainText str]

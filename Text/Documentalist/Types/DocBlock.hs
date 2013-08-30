@@ -50,7 +50,7 @@ instance Show Paragraph where
 
 -- | Represents a portion of text in a documentation string.
 data Span = PlainText String
-          | Reference (Declaration ())
+          | Reference (Declaration (Maybe DocBlock))
           | WebLink String
           | InlineImage String
           | InlineCode Code
@@ -75,7 +75,7 @@ newtype Code = Code String
     deriving (Eq, Show)
 
 -- | One of the parameters to a Function, or one of the values in an Enumeration.
-data DocParam = DocParam (Declaration ()) [Span]
+data DocParam = DocParam (Declaration (Maybe DocBlock)) [Span]
     deriving Eq
 
 instance Show DocParam where
