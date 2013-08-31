@@ -80,6 +80,7 @@ data DocParam = DocParam (Declaration (Maybe DocBlock)) [Span]
 
 instance Show DocParam where
     show (DocParam _ spans) = show spans
+    showList docs = (++) $ intercalate "\n" $ map show docs
 
 -- | Describes the value that a Function returns to its caller.
 newtype Result = Result [Span]
