@@ -14,15 +14,7 @@ instance CommentParser TomDocParser where
 
 -- | Parses all the comments in a 'Module'.
 parseModule :: Module (Maybe Comment) -> Module (Maybe DocBlock)
-parseModule (Module mod decls) = Module mod $ parseDecls decls
-
--- | Parses all the comments in a list of 'Declaration's.
-parseDecls :: [Declaration (Maybe Comment)] -> [Declaration (Maybe DocBlock)]
-parseDecls = map parseDecl
-
--- | Determines whether a string contains a parameter declaration.
-isParam :: String -> Bool
-isParam = ("- " `isInfixOf`)
+parseModule (Module mod decls) = Module mod $ map parseDecl decls
 
 -- | Parses the comment of a 'Declaration'.
 parseDecl :: Declaration (Maybe Comment) -> Declaration (Maybe DocBlock)
@@ -67,6 +59,10 @@ parseDecl d =
                 then Nothing
                 else Just parseComment'
     in fmap (>>= parseComment) d
+
+-- | Determines whether a string contains a parameter declaration.
+isParam :: String -> Bool
+isParam = ("- " `isInfixOf`)
 
 parseParagraph :: String -> Paragraph
 parseParagraph = TextParagraph . parseSpans
