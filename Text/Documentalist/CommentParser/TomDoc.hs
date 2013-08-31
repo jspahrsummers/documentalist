@@ -83,8 +83,8 @@ parseParam decl str = DocParam (Nothing <$ decl) (parseSpans str)
 
 -- | Make a paragraph from a string
 parseParagraph :: String -> Paragraph
-parseParagraph x | x `isInfixOf` "> " = QuotedText $ parseParagraph $ dequote x 
-                 | x `isInfixOf` "```" = CodeBlock $ Code $ x
+parseParagraph x | "> " `isPrefixOf` x = QuotedText $ parseParagraph $ dequote x 
+                 | "```" `isPrefixOf` x = CodeBlock $ Code $ x
                  | otherwise = TextParagraph $ parseSpans x
     where
       -- TODO: Removes 1 level of qutoes
