@@ -89,7 +89,7 @@ parseParagraph x | x `isInfixOf` "> " = QuotedText $ parseParagraph $ dequote x
     where
       -- TODO: Removes 1 level of qutoes
       dequote :: String -> String
-      dequote = id
+      dequote _ = ""
 
 -- | Parse a string of Markdown into spans
 parseSpans :: String -> [Span]
