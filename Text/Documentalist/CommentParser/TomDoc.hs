@@ -87,14 +87,14 @@ parseParagraph x | x `isInfixOf` "> " = QuotedText $ parseParagraph $ dequote x
                  | x `isInfixOf` "```" = CodeBlock $ Code $ x
                  | otherwise = TextParagraph $ parseSpans x
     where
-      -- Removes 1 level of qutoes
+      -- TODO: Removes 1 level of qutoes
       dequote :: String -> String
-      dequote = undefined
+      dequote = id
 
 -- | Parse a string of Markdown into spans
 parseSpans :: String -> [Span]
 parseSpans str = case (parse (manyTill (pRef <|> pLink <|> pImage <|> pCode <|> pEm <|> pStrong <|> pUnderline <|> (fmap (\x -> PlainText [x]) anyChar)) eof) "" str) of
-      Left x -> []
+      Left _ -> []
       Right y -> flattenText y
     where
       flattenText :: [Span] -> [Span]
@@ -104,14 +104,14 @@ parseSpans str = case (parse (manyTill (pRef <|> pLink <|> pImage <|> pCode <|> 
             -- if single char
             flat (PlainText [y]) ((PlainText x):xs) = (PlainText (y : x)) : xs
             flat ys xs = ys : xs
-      pText :: Parser Span
-      pText = fmap PlainText $ manyTill anyChar eof
+      -- pText :: Parser Span
+      -- pText = fmap PlainText $ manyTill anyChar eof
       pRef :: Parser Span
       pRef = fail "unimplemented"
       pLink :: Parser Span
       pLink = do
         char '['
-        name <- manyTill anyChar (char ']')
+        _ <- manyTill anyChar (char ']') -- Name
         char '('
         url <- manyTill anyChar (char ')')
         return $ WebLink url
@@ -119,7 +119,7 @@ parseSpans str = case (parse (manyTill (pRef <|> pLink <|> pImage <|> pCode <|> 
       pImage = do
         char '!'
         char '['
-        name <- manyTill anyChar (char ']')
+        _ <- manyTill anyChar (char ']') -- Name
         char '('
         url <- manyTill anyChar (char ')')
         return $ InlineImage url
