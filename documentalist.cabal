@@ -40,7 +40,8 @@ library
                       containers >= 0.5,
                       mtl >= 2.1,
                       split >= 0.2,
-                      transformers >= 0.3
+                      transformers >= 0.3,
+                      parsec >= 3.1
   other-modules:      Text.Documentalist.SourceParser.Clang.FFI
                       Text.Documentalist.SourceParser.Clang.Types
                       Text.Documentalist.SourceParser.Clang.Internal

@@ -5,6 +5,8 @@ import Data.Functor
 import Data.List
 import Data.List.Split
 import Text.Documentalist.CommentParser
+import Text.Parsec
+import Text.Parsec.String
 
 -- | Parses comments in tomdoc.org format.
 data TomDocParser = TomDocParser
@@ -64,9 +66,6 @@ parseDecl d =
 isParam :: String -> Bool
 isParam = ("- " `isInfixOf`)
 
-parseParagraph :: String -> Paragraph
-parseParagraph = TextParagraph . parseSpans
-
 parseParams :: Declaration t -> String -> [DocParam]
 parseParams decl str =
     let groupParams :: [String] -> [String]
@@ -82,5 +81,65 @@ parseParam :: Declaration t -> String -> DocParam
 -- TODO: Pass in a real DocBlock here.
 parseParam decl str = DocParam (Nothing <$ decl) (parseSpans str)
 
+-- | Make a paragraph from a string
+parseParagraph :: String -> Paragraph
+parseParagraph x | x `isInfixOf` "> " = QuotedText $ parseParagraph $ dequote x 
+                 | x `isInfixOf` "```" = CodeBlock $ Code $ x
+                 | otherwise = TextParagraph $ parseSpans x
+    where
+      -- Removes 1 level of qutoes
+      dequote :: String -> String
+      dequote = undefined
+
+-- | Parse a string of Markdown into spans
 parseSpans :: String -> [Span]
-parseSpans str = [PlainText str]
+parseSpans str = case (parse (manyTill (pRef <|> pLink <|> pImage <|> pCode <|> pEm <|> pStrong <|> pUnderline <|> (fmap (\x -> PlainText [x]) anyChar)) eof) "" str) of
+      Left x -> []
+      Right y -> flattenText y
+    where
+      flattenText :: [Span] -> [Span]
+      flattenText xs = foldr flat [] xs
+          where
+            flat :: Span -> [Span] -> [Span]
+            -- if single char
+            flat (PlainText [y]) ((PlainText x):xs) = (PlainText (y : x)) : xs
+            flat ys xs = ys : xs
+      pText :: Parser Span
+      pText = fmap PlainText $ manyTill anyChar eof
+      pRef :: Parser Span
+      pRef = fail "unimplemented"
+      pLink :: Parser Span
+      pLink = do
+        char '['
+        name <- manyTill anyChar (char ']')
+        char '('
+        url <- manyTill anyChar (char ')')
+        return $ WebLink url
+      pImage :: Parser Span
+      pImage = do
+        char '!'
+        char '['
+        name <- manyTill anyChar (char ']')
+        char '('
+        url <- manyTill anyChar (char ')')
+        return $ InlineImage url
+      pCode :: Parser Span
+      pCode = do
+        char '`'
+        code <- manyTill anyChar (char '`')
+        return $ InlineCode $ Code code
+      pEm :: Parser Span
+      pEm = do
+        char '_'
+        text <- manyTill anyChar (char '_')
+        return $ EmphasizedText $ PlainText text
+      pStrong :: Parser Span
+      pStrong = do
+        char '*'
+        text <- manyTill anyChar (char '*')
+        return $ StrongText $ PlainText text
+      pUnderline :: Parser Span
+      pUnderline = do
+        char '_' >> char '_'
+        text <- manyTill anyChar (char '_' >> char '_')
+        return $ UnderlinedText $ PlainText text
