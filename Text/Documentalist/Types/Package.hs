@@ -12,8 +12,8 @@ module Text.Documentalist.Types.Package ( Identifier(..)
                                         , traversePackage
                                         ) where
 
-import Data.Foldable
-import Data.Traversable hiding (mapM_)
+import Data.Foldable hiding (mapM_)
+import Data.Traversable
 import Text.Documentalist.Util
 
 -- | An identifier, as it would be written in the source language.
