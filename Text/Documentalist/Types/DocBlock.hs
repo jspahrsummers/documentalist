@@ -67,7 +67,7 @@ instance Show Span where
     show (InlineCode (Code str)) = "`" ++ str ++ "`"
     show (EmphasizedText span) = "_" ++ show span ++ "_"
     show (StrongText span) = "*" ++ show span ++ "*"
-    show (UnderlinedText span) = "_" ++ show span ++ "_"
+    show (UnderlinedText span) = "__" ++ show span ++ "__"
     showList spans = (++) $ unwords $ map show spans
 
 -- | A block or span of code in the source language.

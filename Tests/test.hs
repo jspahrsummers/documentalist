@@ -7,6 +7,7 @@ import Test.HUnit
 import Text.Documentalist
 import Text.Documentalist.CommentParser.TomDoc
 import Text.Documentalist.SourceParser.Clang
+import qualified Tests.TomDocExamples as T
 
 main :: IO ()
 main = do
