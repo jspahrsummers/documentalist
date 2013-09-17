@@ -9,15 +9,18 @@ import Text.Documentalist.CommentParser
 -- | Parses comments in tomdoc.org format.
 data TomDocParser = TomDocParser
 
+-- | Alias for convenience
+type EDocBlock = Either CommentParseException DocBlock
+
 instance CommentParser TomDocParser where
-    parseDocs _ (Package pkg mods) = Right $ Package pkg $ map parseModule mods
+    parseDocs _ (Package pkg mods) = Package pkg $ map parseModule mods
 
 -- | Parses all the comments in a 'Module'.
-parseModule :: Module (Maybe Comment) -> Module (Maybe DocBlock)
+parseModule :: Module (Maybe Comment) -> Module EDocBlock
 parseModule (Module mod decls) = Module mod $ parseDecls decls
 
 -- | Parses all the comments in a list of 'Declaration's.
-parseDecls :: [Declaration (Maybe Comment)] -> [Declaration (Maybe DocBlock)]
+parseDecls :: [Declaration (Maybe Comment)] -> [Declaration EDocBlock]
 parseDecls = map parseDecl
 
 -- | Determines whether a string contains a parameter declaration.
@@ -25,9 +28,9 @@ isParam :: String -> Bool
 isParam = ("- " `isInfixOf`)
 
 -- | Parses the comment of a 'Declaration'.
-parseDecl :: Declaration (Maybe Comment) -> Declaration (Maybe DocBlock)
+parseDecl :: Declaration (Maybe Comment) -> Declaration EDocBlock
 parseDecl d =
-    let parseComment :: Comment -> Maybe DocBlock
+    let parseComment :: Comment -> EDocBlock
         parseComment (Comment str) =
             let paras = splitOn "\n\n" str
 
@@ -51,7 +54,7 @@ parseDecl d =
                     in if null rem
                         then (Nothing, xs)
                         else (Just $ head rem, pref ++ tail rem)
-            
+
                 parseComment' :: DocBlock
                 parseComment' =
                     let (res, paras') = extract isResult paras
@@ -64,9 +67,9 @@ parseDecl d =
                                 , result = fmap (Result . parseSpans) res
                                 }
             in if null paras || null (head paras)
-                then Nothing
-                else Just parseComment'
-    in fmap (>>= parseComment) d
+                then Left undefined
+                else Right parseComment'
+    in maybe (Left $ CommentParseException Nothing Nothing "Comment not found") parseComment `fmap` d
 
 parseParagraph :: String -> Paragraph
 parseParagraph = TextParagraph . parseSpans
