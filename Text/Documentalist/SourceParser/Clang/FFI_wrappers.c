@@ -64,6 +64,13 @@ char *doc_getCursorSpelling(const CXCursor *cursor) {
 	return doc_fromCXString(clang_getCursorSpelling(*cursor));
 }
 
+char *doc_getCursorFilename(const CXCursor *cursor) {
+	CXFile file;
+	clang_getSpellingLocation(clang_getCursorLocation(*cursor), &file, NULL, NULL, NULL);
+
+	return doc_fromCXString(clang_getFileName(file));
+}
+
 CXType *doc_getCursorType(const CXCursor *cursor) {
 	return doc_dupValue(clang_getCursorType(*cursor));
 }
