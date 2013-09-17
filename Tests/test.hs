@@ -15,7 +15,7 @@ main = do
 
     let c_test = parseDocs TomDocParser p_test
         c_rac  = parseDocs TomDocParser p_rac
-    traversePackage (putStrLn . show) (putStrLn . show) (\_ -> putStrLn . show) c_rac
+    traversePackage (putStrLn . show) (putStrLn . show) (const . putStrLn . show) c_rac
 
     defaultMainWithOpts
       [ testCase "test_num" (testNum p_test)

@@ -14,11 +14,16 @@ import Text.Documentalist.Types.DocBlock
 import Text.Documentalist.Types.Package
 import Text.Documentalist.Types.Comment
  
-docblock = QuasiQuoter { quoteExp = docblockQ }
+docblock = QuasiQuoter { quoteExp = docblockQ
+                       , quotePat = undefined
+                       , quoteType = undefined
+                       , quoteDec = undefined }
 
 -- if you accidentally use a reference, it will break at compile time quoting
 -- remember, this is for testing.
-docblockQ str = dataToExpQ antiDoc $ parseComment undefined (Comment str)
+docblockQ str = dataToExpQ antiDoc
+              $ parseComment
+              $ DecLeaf (Just (Comment str)) (Identifier "test") (Constant Nothing)
 
 instance Typeable (Declaration a) where
   -- WARNING: missing implementation

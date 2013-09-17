@@ -7,14 +7,15 @@ import Text.Parsec
 import Text.Parsec.String
 import Data.List
 import Data.List.Split
-import Control.Monad.Error.Class
+import Data.Foldable (toList)
 import Data.Maybe
+import Control.Monad.Error.Class
 
 -- | Maybe parse a comment into a DocBlock
-parseComment :: Declaration (Maybe Comment) -> Comment -> Either CommentParseException DocBlock
-parseComment d' s =
+parseComment :: Declaration (Maybe Comment) -> Either CommentParseException DocBlock
+parseComment d' =
     let d = fmap fromJust d' -- this is safe by construction
-        (Comment commentStr) = s -- == head $ Data.Foldable.toList d
+        (Comment commentStr) = head $ toList d
         paras = splitOn "\n\n" commentStr
 
         isResult :: String -> Bool

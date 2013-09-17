@@ -24,4 +24,4 @@ parseDecls = map parseDecl
 
 -- | Parses the comment of a 'Declaration'.
 parseDecl :: Declaration (Maybe Comment) -> Declaration EDocBlock
-parseDecl d = maybe (Left $ strMsg "Comment not found") (parseComment d) `fmap` d
+parseDecl d = maybe (Left (strMsg "Comment not found")) (const (parseComment d)) `fmap` d
