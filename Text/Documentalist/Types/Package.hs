@@ -10,6 +10,8 @@ module Text.Documentalist.Types.Package ( Identifier(..)
                                         , Module(..)
                                         , Package(..)
                                         , traversePackage
+                                        , traverseModule
+                                        , traverseDeclaration
                                         ) where
 
 import Data.Foldable hiding (mapM_)
@@ -100,14 +102,15 @@ traverseModule :: Monad m
                                                     --   The @Int@ represents the zero-based nesting level.
                -> Module t                          -- ^ The module to traverse.
                -> m ()
-traverseModule modName declFun (Module n xs) = modName n >> mapM_ (traverseDeclaration 0 declFun) xs
+traverseModule modName declFun (Module n xs) = modName n >> mapM_ (traverseDeclaration declFun) xs
 
 -- | Traverse a declaration with a monad
 traverseDeclaration :: Monad m
-                    => Int                              -- ^ The zero-based nesting level that the input 'Declaration' exists at.
-                    -> (Int -> Declaration t -> m ())   -- ^ An action to perform with each 'Declaration'.
+                    => (Int -> Declaration t -> m ())   -- ^ An action to perform with each 'Declaration'.
                                                         --   The @Int@ represents the zero-based nesting level.
                     -> Declaration t                    -- ^ The declaration to traverse.
                     -> m ()
-traverseDeclaration d declFun x@(DecLeaf _ _ _)    = declFun d x
-traverseDeclaration d declFun x@(DecNode _ _ _ xs) = declFun d x >> mapM_ (traverseDeclaration (d + 1) declFun) xs
+traverseDeclaration declFun decl =
+    let traverseDeclaration' d declFun x@(DecLeaf _ _ _)    = declFun d x
+        traverseDeclaration' d declFun x@(DecNode _ _ _ xs) = declFun d x >> mapM_ (traverseDeclaration' (d + 1) declFun) xs
+    in traverseDeclaration' 0 declFun decl
