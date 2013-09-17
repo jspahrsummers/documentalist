@@ -96,8 +96,10 @@ parseSpans str = case (parse (manyTill (pRef <|> pLink <|> pImage <|> pCode <|> 
             -- if single char
             flat (PlainText [y]) ((PlainText x):xs) = (PlainText (y : x)) : xs
             flat ys xs = ys : xs
+      
       pRef :: Parser Span
       pRef = fail "unimplemented"
+      
       pLink :: Parser Span
       pLink = try $ do
         char '['
@@ -105,6 +107,7 @@ parseSpans str = case (parse (manyTill (pRef <|> pLink <|> pImage <|> pCode <|> 
         char '('
         url <- manyTill anyChar (char ')')
         return $ WebLink url
+      
       pImage :: Parser Span
       pImage = try $ do
         char '!'
@@ -118,20 +121,28 @@ parseSpans str = case (parse (manyTill (pRef <|> pLink <|> pImage <|> pCode <|> 
       pCode = do
         code <- sides (char '`')
         return $ InlineCode $ Code code
+      
       pStrong :: Parser Span
       pStrong = do
         text <- sides (char '*' >> char '*')
         return $ StrongText $ PlainText text
+      
       pUnderline :: Parser Span
       pUnderline = do
         text <- sides (char '_' >> char '_')
         return $ UnderlinedText $ PlainText text
+      
       -- em must occur after strong and underline
       pEm :: Parser Span
       pEm = do
+        -- XXX: This is incorrect. This will match on _a*
         text <- sides (char '_') <|> sides (char '*')
         return $ EmphasizedText $ PlainText text
-      pStrike :: Parser Span
-      pStrike = fail "unimplemented"
       
+      pStrike :: Parser Span
+      pStrike = do
+        text <- sides (char '~' >> char '~')
+        return $ StrikethroughText $ PlainText text
+      
+      -- helper
       sides x = try (x >> manyTill alphaNum x)

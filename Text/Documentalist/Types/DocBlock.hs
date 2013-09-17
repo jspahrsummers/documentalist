@@ -57,6 +57,7 @@ data Span = PlainText String
           | EmphasizedText Span
           | StrongText Span
           | UnderlinedText Span
+          | StrikethroughText Span
           deriving Eq
 
 instance Show Span where
@@ -68,6 +69,7 @@ instance Show Span where
     show (EmphasizedText span) = "_" ++ show span ++ "_"
     show (StrongText span) = "*" ++ show span ++ "*"
     show (UnderlinedText span) = "__" ++ show span ++ "__"
+    show (StrikethroughText span) = "~~" ++ show span ++ "~~"
     showList spans = (++) $ unwords $ map show spans
 
 -- | A block or span of code in the source language.
