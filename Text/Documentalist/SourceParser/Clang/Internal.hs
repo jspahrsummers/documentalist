@@ -14,6 +14,7 @@ module Text.Documentalist.SourceParser.Clang.Internal ( Index
                                                       , getCursorType
                                                       , getCursorResultType
                                                       , getUnderlyingType
+                                                      , getCursorFilename
                                                       ) where
 
 import Control.Applicative
@@ -77,11 +78,13 @@ newTranslationUnit file idx@(Index idxPtr) = do
 
 -- | Converts a C string into a Haskell string, then frees the input.
 wrapCString :: CString -> IO String
-wrapCString cStr = do
-    str <- peekCString cStr
-    FFI.free $ castPtr cStr
+wrapCString cStr
+    | cStr == nullPtr = error "C string is NULL"
+    | otherwise = do
+        str <- peekCString cStr
+        FFI.free $ castPtr cStr
 
-    return str
+        return str
 
 -- | Creates a cursor that begins at the level of a translation unit.
 getCursor :: TranslationUnit -> Cursor
@@ -183,3 +186,12 @@ getUnderlyingType cursor
 
     | otherwise = Nothing
     where k = cursorKind cursor
+
+-- | Gets the full path of the file containing the original location of the given cursor.
+getCursorFilename :: Cursor -> Maybe String
+getCursorFilename (Cursor _ ptr) =
+    unsafePerformIO $ withForeignPtr ptr $ \cxCursor -> do
+        filename <- FFI.getCursorFilename cxCursor
+        if filename == nullPtr
+            then return Nothing
+            else Just <$> wrapCString filename

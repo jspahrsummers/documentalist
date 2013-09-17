@@ -1,2 +1,3 @@
 FFI.*
 !FFI.hsc
+Types.hs

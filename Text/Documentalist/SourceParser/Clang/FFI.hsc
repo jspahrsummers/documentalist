@@ -86,3 +86,6 @@ foreign import ccall unsafe "FFI_wrappers.h doc_getEnumDeclIntegerType"
 
 foreign import ccall unsafe "FFI_wrappers.h doc_getTypeSpelling"
     getTypeSpelling :: CXType -> IO CString
+
+foreign import ccall unsafe "FFI_wrappers.h doc_getCursorFilename"
+    getCursorFilename :: CXCursor -> IO CString

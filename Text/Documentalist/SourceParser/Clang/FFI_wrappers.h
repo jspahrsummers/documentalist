@@ -16,6 +16,7 @@ unsigned doc_isDeclaration(const CXCursor *cursor);
 enum CXCursorKind doc_getCursorKind(const CXCursor *cursor);
 CXCursor *doc_dupCursor(const CXCursor *cursor);
 char *doc_getCursorSpelling(const CXCursor *cursor);
+char *doc_getCursorFilename(const CXCursor *cursor);
 
 CXType *doc_getCursorType(const CXCursor *cursor);
 CXType *doc_getCursorResultType(const CXCursor *cursor);
