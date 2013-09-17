@@ -28,4 +28,4 @@ instance Exception CommentParseException
 -- | Parses a specific 'Comment' syntax.
 class CommentParser p where
     -- | Parses the comments in the given package into 'DocBlock's.
-    parseDocs :: p -> Package (Maybe Comment) -> Either CommentParseException (Package (Maybe DocBlock))
+    parseDocs :: p -> Package (Maybe Comment) -> Package (Either CommentParseException DocBlock)
