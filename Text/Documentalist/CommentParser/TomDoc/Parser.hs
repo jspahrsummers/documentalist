@@ -75,20 +75,29 @@ parseParam decl str = DocParam (Nothing <$ decl) (parseSpans str)
 
 -- | Make a paragraph from a string
 parseParagraph :: String -> Paragraph
-parseParagraph x | "> " `isPrefixOf` x = QuotedText $ parseParagraph $ dequote x 
-                 | "```" `isPrefixOf` x = CodeBlock $ Code $ x
+parseParagraph x | "> " `isPrefixOf` x = QuotedText . parseParagraph . dequote $ lines x
+                 | "```" `isPrefixOf` x = CodeBlock $ Code
+                                        $ drop 4 -- drop the ```\n at the start
+                                        $ take (length x - 4) x -- don't take the \n``` at the end
                  | otherwise = TextParagraph $ parseSpans x
     where
       -- TODO: Removes 1 level of qutoes
-      dequote :: String -> String
-      dequote _ = ""
+      dequote :: [String] -> String
+      dequote = unlines . map (drop 2)
 
 -- | Parse a string of Markdown into spans
 parseSpans :: String -> [Span]
-parseSpans str = case (parse (manyTill (pRef <|> pLink <|> pImage <|> pCode <|> pStrong <|> pUnderline <|> pEm <|> pStrike <|> (fmap (PlainText . return) anyChar)) eof) "" str) of
+parseSpans str = case (parse (manyTill docParsers eof) "" str) of
       Left _ -> []
       Right y -> flattenText y
+    
     where
+      -- The order here is important
+      docParsers :: Parser Span
+      docParsers = pRef    <|> pLink      <|> pImage <|> pCode   <|>
+                   pStrong <|> pUnderline <|> pEm    <|> pStrike <|>
+                   (PlainText . return) `fmap` anyChar
+      
       flattenText :: [Span] -> [Span]
       flattenText xs = foldr flat [] xs
           where
