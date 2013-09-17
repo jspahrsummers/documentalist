@@ -84,7 +84,7 @@ parseParagraph x | "> " `isPrefixOf` x = QuotedText $ parseParagraph $ dequote x
 
 -- | Parse a string of Markdown into spans
 parseSpans :: String -> [Span]
-parseSpans str = case (parse (manyTill (pRef <|> pLink <|> pImage <|> pCode <|> pStrong <|> pUnderline <|> pEm <|> pStrike <|> (fmap (\x -> PlainText [x]) anyChar)) eof) "" str) of
+parseSpans str = case (parse (manyTill (pRef <|> pLink <|> pImage <|> pCode <|> pStrong <|> pUnderline <|> pEm <|> pStrike <|> (fmap (PlainText . return) anyChar)) eof) "" str) of
       Left _ -> []
       Right y -> flattenText y
     where
