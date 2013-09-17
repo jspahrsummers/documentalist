@@ -3,6 +3,7 @@ module Text.Documentalist.CommentParser.TomDoc ( TomDocParser(..)
 
 import Text.Documentalist.CommentParser
 import Text.Documentalist.CommentParser.TomDoc.Parser
+import Control.Monad.Error.Class
 
 -- | Parses comments in tomdoc.org format.
 data TomDocParser = TomDocParser
@@ -21,10 +22,6 @@ parseModule (Module mod decls) = Module mod $ parseDecls decls
 parseDecls :: [Declaration (Maybe Comment)] -> [Declaration EDocBlock]
 parseDecls = map parseDecl
 
--- | Determines whether a string contains a parameter declaration.
-isParam :: String -> Bool
-isParam = ("- " `isInfixOf`)
-
 -- | Parses the comment of a 'Declaration'.
-parseDecl :: Declaration (Maybe Comment) -> Declaration (Maybe DocBlock)
-parseDecl d = (>>= \(Comment str) -> parseComment d str) `fmap` d
+parseDecl :: Declaration (Maybe Comment) -> Declaration EDocBlock
+parseDecl d = maybe (Left $ strMsg "Comment not found") (parseComment d) `fmap` d

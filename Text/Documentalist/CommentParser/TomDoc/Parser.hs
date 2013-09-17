@@ -7,10 +7,15 @@ import Text.Parsec
 import Text.Parsec.String
 import Data.List
 import Data.List.Split
+import Control.Monad.Error.Class
+import Data.Maybe
 
-parseComment :: Declaration (Maybe Comment) -> String -> Maybe DocBlock
-parseComment d str =
-    let paras = splitOn "\n\n" str
+-- | Maybe parse a comment into a DocBlock
+parseComment :: Declaration (Maybe Comment) -> Comment -> Either CommentParseException DocBlock
+parseComment d' s =
+    let d = fmap fromJust d' -- this is safe by construction
+        (Comment commentStr) = s -- == head $ Data.Foldable.toList d
+        paras = splitOn "\n\n" commentStr
 
         isResult :: String -> Bool
         isResult = ("Returns" `isPrefixOf`)
@@ -45,8 +50,8 @@ parseComment d str =
                         , result = fmap (Result . parseSpans) res
                         }
     in if null paras || null (head paras)
-        then Nothing
-        else Just parseComment'
+        then Left $ strMsg "Unable to parse comment"
+        else Right parseComment'
         
 -- | Determines whether a string contains a parameter declaration.
 isParam :: String -> Bool

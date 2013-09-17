@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
-module Tests.TomDocExamples where
+module TomDocExamples where
 
-import Tests.TestHelpers
+import TestHelpers
 
 test = [docblock|
 whats this
