@@ -7,13 +7,24 @@ import Text.Documentalist.CommentParser.TomDoc.Parser
 -- | Parses comments in tomdoc.org format.
 data TomDocParser = TomDocParser
 
+-- | Alias for convenience
+type EDocBlock = Either CommentParseException DocBlock
+
 instance CommentParser TomDocParser where
-    parseDocs _ (Package pkg mods) = Right $ Package pkg $ map parseModule mods
+    parseDocs _ (Package pkg mods) = Package pkg $ map parseModule mods
 
 -- | Parses all the comments in a 'Module'.
-parseModule :: Module (Maybe Comment) -> Module (Maybe DocBlock)
-parseModule (Module mod decls) = Module mod $ map parseDecl decls
+parseModule :: Module (Maybe Comment) -> Module EDocBlock
+parseModule (Module mod decls) = Module mod $ parseDecls decls
+
+-- | Parses all the comments in a list of 'Declaration's.
+parseDecls :: [Declaration (Maybe Comment)] -> [Declaration EDocBlock]
+parseDecls = map parseDecl
+
+-- | Determines whether a string contains a parameter declaration.
+isParam :: String -> Bool
+isParam = ("- " `isInfixOf`)
 
 -- | Parses the comment of a 'Declaration'.
 parseDecl :: Declaration (Maybe Comment) -> Declaration (Maybe DocBlock)
-parseDecl d = fmap (>>= \(Comment str) -> parseComment d str) d
+parseDecl d = (>>= \(Comment str) -> parseComment d str) `fmap` d

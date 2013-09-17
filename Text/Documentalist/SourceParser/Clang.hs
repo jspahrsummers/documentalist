@@ -31,13 +31,13 @@ instance SourceParser ClangParser where
             ind <- newIndex
             tu <- newTranslationUnit path ind
 
-            let mod = Module path $ walkFromCursor $ getCursor tu
+            let mod = walkFromCursor path $ getCursor tu
             return $ Package "" [mod]
 
 -- | Traverses the AST, beginning with the given cursor.
-walkFromCursor :: Cursor -> [Declaration (Maybe Comment)]
-walkFromCursor c =
-    mapMaybe parseDecl $ descendantDecls c
+walkFromCursor :: FilePath -> Cursor -> Module (Maybe Comment)
+walkFromCursor file c =
+    Module file $ mapMaybe (parseDecl file) (descendantDecls file c)
 
 -- | Retrieves the comment associated with the cursor, and strips out comment markers if needed.
 strippedComment :: Cursor -> Maybe Comment
@@ -60,16 +60,18 @@ strippedComment c =
     in fmap transform $ getComment c
 
 -- | Finds all declaration cursors descendant from the given cursor.
-descendantDecls :: Cursor -> [Cursor]
-descendantDecls c =
-    visitDescendants c $ \desc ->
-        if isDeclaration desc
-            then (True, continue)
-            else (False, recurse)
+descendantDecls :: FilePath -> Cursor -> [Cursor]
+descendantDecls file c =
+    let visit desc
+            | not sameFile = (False, continue)
+            | isDeclaration desc = (True, continue)
+            | otherwise = (False, recurse)
+            where sameFile = fromMaybe False $ fmap (== file) $ getCursorFilename desc
+    in visitDescendants c visit
 
 -- | Attempts to parse the declaration at a cursor.
-parseDecl :: Cursor -> Maybe (Declaration (Maybe Comment))
-parseDecl c
+parseDecl :: FilePath -> Cursor -> Maybe (Declaration (Maybe Comment))
+parseDecl file c
     | k == objcInterfaceDecl =
         Just $ DecNode comment (Identifier $ getCursorSpelling c) (Class $ super objcSuperclassRef ++ super objcProtocolRef) decls
 
@@ -110,8 +112,8 @@ parseDecl c
     where k = cursorKind c
           comment = strippedComment c
 
-          decls = mapMaybe parseDecl $ descendantDecls c
-          super t = map (Type . getCursorSpelling) $ childrenOfKind c t
+          decls = mapMaybe (parseDecl file) (descendantDecls file c)
+          super t = map (Type . getCursorSpelling) (childrenOfKind c t)
           declType = Type $ getCursorType c
           underType = fmap Type $ getUnderlyingType c
           results = [Type $ getCursorResultType c]
