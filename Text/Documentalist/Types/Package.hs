@@ -9,9 +9,12 @@ module Text.Documentalist.Types.Package ( Identifier(..)
                                         , DecFLeaf(..)
                                         , Module(..)
                                         , Package(..)
+                                        , traversePackage
+                                        , traverseModule
+                                        , traverseDeclaration
                                         ) where
 
-import Data.Foldable
+import Data.Foldable hiding (mapM_)
 import Data.Traversable
 import Text.Documentalist.Util
 
@@ -47,7 +50,7 @@ data Declaration t = DecLeaf t Identifier DecFLeaf
 data DecFNode = Class           SuperTypes     -- ^ A class declaration.
               | Interface       SuperTypes     -- ^ An abstract interface, or Objective-C protocol definition.
               | Mixin           Type           -- ^ A mixin, or Objective-C category declaration.
-              | Enumeration     UnderlyingType -- ^ An enumeration.                   
+              | Enumeration     UnderlyingType -- ^ An enumeration.
               | Function        ResultTypes    -- ^ A function.
               | ClassMethod     ResultTypes    -- ^ A class method or static member function.
               | InstanceMethod  ResultTypes    -- ^ An instance method or member function.
@@ -81,3 +84,33 @@ instance Eq t => Ord (Package t) where
 
 instance Show t => Show (Package t) where
     show (Package n mods) = "Package \"" ++ n ++ "\": " ++ showFormattedList mods
+
+-- | Traverse a package with a monad
+traversePackage :: Monad m
+                => (String -> m ())                 -- ^ An action to perform with the package name.
+                -> (String -> m ())                 -- ^ An action to perform with the module name.
+                -> (Int -> Declaration t -> m ())   -- ^ An action to perform with each 'Declaration'.
+                                                    --   The @Int@ represents the zero-based nesting level.
+                -> Package t                        -- ^ The package to traverse.
+                -> m ()
+traversePackage pkgName modName declFun (Package n ms) = pkgName n >> mapM_ (traverseModule modName declFun) ms
+
+-- | Traverse a module with a monad
+traverseModule :: Monad m
+               => (String -> m ())                  -- ^ An action to perform with the module name.
+               -> (Int -> Declaration t -> m ())    -- ^ An action to perform with each 'Declaration'.
+                                                    --   The @Int@ represents the zero-based nesting level.
+               -> Module t                          -- ^ The module to traverse.
+               -> m ()
+traverseModule modName declFun (Module n xs) = modName n >> mapM_ (traverseDeclaration declFun) xs
+
+-- | Traverse a declaration with a monad
+traverseDeclaration :: Monad m
+                    => (Int -> Declaration t -> m ())   -- ^ An action to perform with each 'Declaration'.
+                                                        --   The @Int@ represents the zero-based nesting level.
+                    -> Declaration t                    -- ^ The declaration to traverse.
+                    -> m ()
+traverseDeclaration declFun decl =
+    let traverseDeclaration' d declFun x@(DecLeaf _ _ _)    = declFun d x
+        traverseDeclaration' d declFun x@(DecNode _ _ _ xs) = declFun d x >> mapM_ (traverseDeclaration' (d + 1) declFun) xs
+    in traverseDeclaration' 0 declFun decl
