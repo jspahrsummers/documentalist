@@ -69,7 +69,7 @@ parseDecl d =
             in if null paras || null (head paras)
                 then Left undefined
                 else Right parseComment'
-    in fmap (maybe (Left $ CommentParseException Nothing Nothing "Comment not found") parseComment) d
+    in maybe (Left $ CommentParseException Nothing Nothing "Comment not found") parseComment `fmap` d
 
 parseParagraph :: String -> Paragraph
 parseParagraph = TextParagraph . parseSpans

@@ -1,6 +1,5 @@
 import Control.Applicative
 import Data.Traversable hiding (mapM)
-import Prelude
 import System.Environment
 import System.IO (hPutStrLn, stderr)
 import Text.Documentalist
@@ -16,6 +15,6 @@ main = do
     print displayable
 
 showErrors :: Either CommentParseException DocBlock -> IO (Maybe DocBlock)
-showErrors (Left e) = hPutStrLn stderr (show e) >> return Nothing
-showErrors (Right x) = return $ Just x
-
+showErrors =
+    let showError e = hPutStrLn stderr (show e) >> return Nothing
+    in either showError (return . Just)
