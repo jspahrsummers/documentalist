@@ -14,8 +14,8 @@ import Control.Monad.Error.Class
 -- | Maybe parse a comment into a DocBlock
 parseComment :: Declaration (Maybe Comment) -> Either CommentParseException DocBlock
 parseComment d' =
-    let d = fmap fromJust d' -- this is safe by construction
-        (Comment commentStr) = head $ toList d
+    let m = head $ toList d'
+        Just (Comment commentStr) = m
         paras = splitOn "\n\n" commentStr
 
         isResult :: String -> Bool
@@ -46,11 +46,11 @@ parseComment d' =
                 (body, examples) = break isExampleHeading paras''
             in DocBlock { summary = parseParagraph $ head $ body ++ [""]
                         , description = map parseParagraph $ filter (not . null) $ drop 1 body
-                        , parameters = maybe [] (parseParams d) params
+                        , parameters = maybe [] (parseParams d') params
                         , example = if null examples then Nothing else Just $ Code $ intercalate "\n\n" $ drop 1 examples
                         , result = fmap (Result . parseSpans) res
                         }
-    in if null paras || null (head paras)
+    in if isNothing m || null paras || null (head paras)
         then Left $ strMsg "Unable to parse comment"
         else Right parseComment'
         

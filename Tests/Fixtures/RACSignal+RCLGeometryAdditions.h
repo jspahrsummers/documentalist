@@ -1,17 +1,26 @@
+//
+//  RACSignal+RCLGeometryAdditions.h
+//  ReactiveCocoaLayout
+//
+//  Created by Justin Spahr-Summers on 2012-12-12.
+//  Copyright (c) 2012 GitHub. All rights reserved.
+//
+
 #import <Foundation/Foundation.h>
+#import <ReactiveCocoa/ReactiveCocoa.h>
+#import "Fixtures/RACSignal.h"
+// Adds geometry functions to RACSignal.
+@interface RACSignal ()
 
-/** Im in ur NSStrings */
-extern NSString * const DocumentingThingz;
+/// Returns a signal which sends 0 and completes.
++ (RACSignal *)zero;
 
-/// sup
-void this_is_a_function (BOOL totes);
+/// Invokes -divideWithAmount:padding:fromEdge: with a constant padding of 0.
+///
+/// words and stuff
 
-/**
- * a
- * multi
- * line
- * comment * here
- */
+@end
+
 @interface MyClass : NSObject
 
 /// Lazily binds a _block_ to the *values* in the receiver.
@@ -29,7 +38,4 @@ void this_is_a_function (BOOL totes);
 /// applications of `block`.
 - (void)emptyMethod;
 
-/// test
-- (RACTuple *)divideWithAmount:(RACSignal 
-  *)sliceAmountSignal fromEdge:(NSLayoutAttribute)edgeAttribute;
 @end
