@@ -72,7 +72,7 @@ a ~> b = let
       -- addFuns docblock decs = Right (S.Comment (show decs))
       addFuns docblock (ForeignTypeInfo decs) = Right $ docblock {description = (description docblock) ++ extra}
         where
-          extra = [CodeBlock (Code (intercalate ", " decs))]
+          extra = [CodeBlock (Code (intercalate " -> " decs))]
       idOf (DecLeaf _ (Identifier i) _) = i
     in mapWithNames findInformation b
 
@@ -96,8 +96,8 @@ mkParam' xs = ForeignTypeInfo (mkParam xs)
 
 mkParam :: H.Type -> [String]
 mkParam (TyForall _ _ t) = mkParam t
-mkParam (TyFun t ts) = concat [mkParam t, mkParam ts]
-mkParam (TyApp t1 t2) = concat [mkParam t1, mkParam t2]
+mkParam (TyFun t ts) = (stackingBrackets (mkParam t)) : mkParam ts
+mkParam (TyApp t ts) = [stackingBrackets $ concat [mkParam t, mkParam ts]]
 mkParam (TyTuple _ ts) = concat $ map mkParam ts
 mkParam (TyList t) = mkParam t
 mkParam (TyParen t) = mkParam t
@@ -105,6 +105,9 @@ mkParam (TyInfix t1 _ t2) = concat [mkParam t1, mkParam t2]
 mkParam (TyKind t _) = mkParam t
 mkParam (TyVar n) = [mkName n]
 mkParam (TyCon n) = [mkQName n]
+
+stackingBrackets [x] = x
+stackingBrackets (x:xs) = x ++ " (" ++ stackingBrackets xs ++ ")"
 
 mkQName :: QName -> String
 mkQName (UnQual (Ident n)) = n
