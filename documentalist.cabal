@@ -33,6 +33,7 @@ library
                       Text.Documentalist.CommentParser.TomDoc.Parser
                       Text.Documentalist.SourceParser
                       Text.Documentalist.SourceParser.Clang
+                      Text.Documentalist.SourceParser.Haskell
                       Text.Documentalist.Types.Comment
                       Text.Documentalist.Types.DocBlock
                       Text.Documentalist.Types.Package
@@ -42,7 +43,8 @@ library
                       mtl >= 2.1,
                       split >= 0.2,
                       transformers >= 0.3,
-                      parsec >= 3.1
+                      parsec >= 3.1,
+                      haskell-src-exts >= 1.14
   other-modules:      Text.Documentalist.SourceParser.Clang.FFI
                       Text.Documentalist.SourceParser.Clang.Types
                       Text.Documentalist.SourceParser.Clang.Internal
@@ -72,7 +74,8 @@ test-suite tests
                       test-framework,
                       test-framework-hunit,
                       template-haskell,
-                      HUnit
+                      HUnit,
+                      haskell-src-exts >= 1.14
                       
 
 source-repository head

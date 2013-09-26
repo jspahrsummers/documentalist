@@ -29,4 +29,7 @@ void this_is_a_function (BOOL totes);
 /// applications of `block`.
 - (void)emptyMethod;
 
+/// test
+- (RACTuple *)divideWithAmount:(RACSignal 
+  *)sliceAmountSignal fromEdge:(NSLayoutAttribute)edgeAttribute;
 @end
