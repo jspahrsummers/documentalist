@@ -8,8 +8,8 @@ import Text.Documentalist.SourceParser.Clang
 
 main :: IO ()
 main = do
-    p_test <- runClangParser $ parse "Tests/Fixtures/test_header.h"
-    p_rac  <- runClangParser $ parse "Tests/Fixtures/RACSignal.h"
+    p_test <- runClangParser $ parse "Tests/Fixtures/test_header.h" ["-ObjC", "-nostdinc"]
+    p_rac  <- runClangParser $ parse "Tests/Fixtures/RACSignal.h" ["-ObjC", "-nostdinc"]
     print p_rac
 
     let c_test = parseDocs TomDocParser p_test

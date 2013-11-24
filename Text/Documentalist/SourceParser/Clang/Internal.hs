@@ -63,11 +63,12 @@ newIndex = do
     return $ Index ptr
 
 -- | Creates a translation unit from a source file, and adds it to an index.
-newTranslationUnit :: FilePath -> Index -> IO TranslationUnit
-newTranslationUnit file idx@(Index idxPtr) = do
+-- | ["-ObjC", "-nostdinc"]
+newTranslationUnit :: FilePath -> [String] -> Index -> IO TranslationUnit
+newTranslationUnit file args idx@(Index idxPtr) = do
     cxTU <- withCString file $ \cStr ->
         withForeignPtr idxPtr $ \cxIdx -> do
-            arr@(argv, argc) <- toCStringArray ["-ObjC", "-nostdinc"]
+            arr@(argv, argc) <- toCStringArray args
             cxTU <- FFI.parseTranslationUnit cxIdx cStr argv (fromInteger $ toInteger argc) nullPtr 0 FFI.noOptions
 
             freeCStringArray arr
