@@ -1,4 +1,4 @@
-# Documentalist
+# Documentalist [![Build Status](https://travis-ci.org/jspahrsummers/documentalist.png?branch=master)](https://travis-ci.org/jspahrsummers/documentalist)
 
 Documentalist is an extensible documentation generator that is meant to support
 multiple source languages, documentation syntaxes, and output formats.
