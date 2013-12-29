@@ -57,6 +57,7 @@ data Span = PlainText String
           | EmphasizedText Span
           | StrongText Span
           | UnderlinedText Span
+          | StrikethroughText Span
           deriving Eq
 
 instance Show Span where
@@ -67,7 +68,8 @@ instance Show Span where
     show (InlineCode (Code str)) = "`" ++ str ++ "`"
     show (EmphasizedText span) = "_" ++ show span ++ "_"
     show (StrongText span) = "*" ++ show span ++ "*"
-    show (UnderlinedText span) = "_" ++ show span ++ "_"
+    show (UnderlinedText span) = "__" ++ show span ++ "__"
+    show (StrikethroughText span) = "~~" ++ show span ++ "~~"
     showList spans = (++) $ unwords $ map show spans
 
 -- | A block or span of code in the source language.
@@ -80,6 +82,7 @@ data DocParam = DocParam (Declaration (Maybe DocBlock)) [Span]
 
 instance Show DocParam where
     show (DocParam _ spans) = show spans
+    showList docs = (++) $ intercalate "\n" $ map show docs
 
 -- | Describes the value that a Function returns to its caller.
 newtype Result = Result [Span]
