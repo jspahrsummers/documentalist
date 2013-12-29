@@ -3,7 +3,7 @@ before_install:
   - wget -q -O - http://llvm.org/apt/llvm-snapshot.gpg.key | sudo apt-key add -qq -
   - sudo apt-add-repository -y 'deb http://llvm.org/apt/precise/ llvm-toolchain-precise main'
   - sudo apt-get update -qq
-  - dpkg --get-selections | grep hold
+  - dpkg --get-selections
   - sudo apt-get install -f llvm-3.5 llvm-3.5-dev libclang-common-3.5-dev libclang-3.5-dev
 install:
   - cabal install -v0 --only-dependencies --enable-tests --force-reinstalls
