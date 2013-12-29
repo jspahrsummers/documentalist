@@ -17,20 +17,21 @@ module Text.Documentalist.Types.Package ( Identifier(..)
 import Data.Foldable hiding (mapM_)
 import Data.Traversable
 import Text.Documentalist.Util
+import Text.Documentalist.PrettyPrint
 
 -- | An identifier, as it would be written in the source language.
 newtype Identifier = Identifier String
-    deriving (Eq, Ord)
+    deriving (Show, Eq, Ord)
 
-instance Show Identifier where
-    show (Identifier str) = "`" ++ str ++ "`"
+instance PrettyPrint Identifier where
+    pprint (Identifier str) = "`" ++ str ++ "`"
 
 -- | A type, as it would be declared in the source language.
 newtype Type = Type String
-    deriving (Eq, Ord)
+    deriving (Show, Eq, Ord)
 
-instance Show Type where
-    show (Type str) = "`" ++ str ++ "`"
+instance PrettyPrint Type where
+    pprint (Type str) = "`" ++ str ++ "`"
 
 -- | Represents a list of types (or just a single type) that another type derives from.
 type SuperTypes = [Type]
@@ -63,27 +64,30 @@ data DecFLeaf = Property        UnderlyingType -- ^ A property declaration in a 
               | TypeAlias       Type           -- ^ A redeclaration of a type under a different name.
               deriving (Eq, Show)
 
+instance Show t => PrettyPrint (Declaration t) where
+  pprint = show
+
 -- | A single module in the source language.
 --
 --   The declaration list should contain any top-level declarations in order of appearance.
 data Module t = Module String [Declaration t]
-    deriving (Eq, Functor, Foldable, Traversable)
+    deriving (Show, Eq, Functor, Foldable, Traversable)
 
 instance Eq t => Ord (Module t) where
     compare (Module a _) (Module b _) = compare a b
 
-instance Show t => Show (Module t) where
-    show (Module n decls) = "Module \"" ++ n ++ "\": " ++ showFormattedList decls
+instance Show t => PrettyPrint (Module t) where
+    pprint (Module n decls) = "Module \"" ++ n ++ "\": " ++ pprintFormattedList decls
 
 -- | A package to treat as a single unit for the purposes of documentation generation.
 data Package t = Package String [Module t]
-    deriving (Eq, Functor, Foldable, Traversable)
+    deriving (Show, Eq, Functor, Foldable, Traversable)
 
 instance Eq t => Ord (Package t) where
     compare (Package a _) (Package b _) = compare a b
 
-instance Show t => Show (Package t) where
-    show (Package n mods) = "Package \"" ++ n ++ "\": " ++ showFormattedList mods
+instance Show t => PrettyPrint (Package t) where
+    pprint (Package n mods) = "Package \"" ++ n ++ "\": " ++ pprintFormattedList mods
 
 -- | Traverse a package with a monad
 traversePackage :: Monad m
