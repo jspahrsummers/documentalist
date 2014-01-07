@@ -30,6 +30,7 @@ library
   exposed-modules:    Text.Documentalist
                       Text.Documentalist.CommentParser
                       Text.Documentalist.CommentParser.TomDoc
+                      Text.Documentalist.PrettyPrint
                       Text.Documentalist.SourceParser
                       Text.Documentalist.SourceParser.Clang
                       Text.Documentalist.Types.Comment
@@ -70,7 +71,6 @@ test-suite tests
                       test-framework,
                       test-framework-hunit,
                       HUnit
-                      
 
 source-repository head
   type:     git

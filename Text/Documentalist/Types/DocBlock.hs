@@ -10,6 +10,7 @@ import Control.Monad.Writer.Strict
 import Data.List
 import Data.Maybe
 import Text.Documentalist.Types.Package
+import Text.Documentalist.PrettyPrint
 
 -- | A documentation block for a declaration.
 data DocBlock = DocBlock
@@ -18,10 +19,10 @@ data DocBlock = DocBlock
     , parameters :: [DocParam]
     , example :: Maybe Code
     , result :: Maybe Result
-    } deriving Eq
+    } deriving (Show, Eq)
 
-instance Show DocBlock where
-    show doc =
+instance PrettyPrint DocBlock where
+    pprint doc =
         let desc = description doc
             params = parameters doc
             ex = example doc
@@ -40,13 +41,13 @@ instance Show DocBlock where
 data Paragraph = TextParagraph [Span]
                | CodeBlock Code
                | QuotedText Paragraph
-               deriving Eq
+               deriving (Show, Eq)
 
-instance Show Paragraph where
-    show (TextParagraph spans) = show spans
-    show (CodeBlock (Code str)) = "```\n" ++ str ++ "\n```"
-    show (QuotedText para) = init $ unlines $ map ("> " ++) $ lines $ show para
-    showList paras = (++) $ intercalate "\n\n" $ map show paras
+instance PrettyPrint Paragraph where
+    pprint (TextParagraph spans) = show spans
+    pprint (CodeBlock (Code str)) = "```\n" ++ str ++ "\n```"
+    pprint (QuotedText para) = init $ unlines $ map ("> " ++) $ lines $ show para
+    pprintList paras = (++) $ intercalate "\n\n" $ map show paras
 
 -- | Represents a portion of text in a documentation string.
 data Span = PlainText String
@@ -57,33 +58,34 @@ data Span = PlainText String
           | EmphasizedText Span
           | StrongText Span
           | UnderlinedText Span
-          deriving Eq
+          deriving (Show, Eq)
 
-instance Show Span where
-    show (PlainText str) = str
-    show (Reference decl) = "ref:" ++ show decl
-    show (WebLink url) = "link:" ++ url
-    show (InlineImage url) = "img:" ++ url
-    show (InlineCode (Code str)) = "`" ++ str ++ "`"
-    show (EmphasizedText span) = "_" ++ show span ++ "_"
-    show (StrongText span) = "*" ++ show span ++ "*"
-    show (UnderlinedText span) = "_" ++ show span ++ "_"
-    showList spans = (++) $ unwords $ map show spans
+instance PrettyPrint Span where
+    pprint (PlainText str) = str
+    pprint (Reference decl) = "ref:" ++ show decl
+    pprint (WebLink url) = "link:" ++ url
+    pprint (InlineImage url) = "img:" ++ url
+    pprint (InlineCode (Code str)) = "`" ++ str ++ "`"
+    pprint (EmphasizedText span) = "_" ++ show span ++ "_"
+    pprint (StrongText span) = "*" ++ show span ++ "*"
+    pprint (UnderlinedText span) = "_" ++ show span ++ "_"
+    pprintList spans = (++) $ unwords $ map show spans
 
 -- | A block or span of code in the source language.
 newtype Code = Code String
-    deriving (Eq, Show)
+    deriving (Show, Eq)
 
 -- | One of the parameters to a Function, or one of the values in an Enumeration.
 data DocParam = DocParam (Declaration (Maybe DocBlock)) [Span]
-    deriving Eq
+    deriving (Show, Eq)
 
-instance Show DocParam where
-    show (DocParam _ spans) = show spans
+instance PrettyPrint DocParam where
+    pprint (DocParam _ spans) = show spans
+    pprintList docs = (++) $ intercalate "\n" $ map show docs
 
 -- | Describes the value that a Function returns to its caller.
 newtype Result = Result [Span]
-    deriving Eq
+    deriving (Show, Eq)
 
-instance Show Result where
-    show (Result spans) = show spans
+instance PrettyPrint Result where
+    pprint (Result spans) = show spans
