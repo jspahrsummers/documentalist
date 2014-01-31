@@ -12,4 +12,4 @@ class MonadIO p => SourceParser p where
     -- | Parses a package into a language-independent form.
     --
     --   Any errors will be indicated with a thrown 'Exception'.
-    parse :: FilePath -> p (Package (Maybe Comment))
+    parse :: FilePath -> [String] -> p (Package (Maybe Comment))

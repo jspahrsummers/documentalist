@@ -26,10 +26,10 @@ instance MonadIO ClangParser where
     liftIO = ClangParser
 
 instance SourceParser ClangParser where
-    parse path =
+    parse path args =
         liftIO $ do
             ind <- newIndex
-            tu <- newTranslationUnit path ind
+            tu <- newTranslationUnit path args ind
 
             let mod = walkFromCursor path $ getCursor tu
             return $ Package "" [mod]

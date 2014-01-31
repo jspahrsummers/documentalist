@@ -8,8 +8,10 @@ import Text.Documentalist.SourceParser.Clang
 
 main :: IO ()
 main = do
+    -- get opt here!
     sources <- getArgs
-    docs <- runClangParser $ mapM parse sources
+    let parseWithArgs srcs = parse srcs ["-ObjC", "-nostdinc"]
+    docs <- runClangParser $ mapM parseWithArgs sources
     let commented = map (parseDocs TomDocParser) docs
     displayable <- mapM (traverse showErrors) commented
     print displayable
